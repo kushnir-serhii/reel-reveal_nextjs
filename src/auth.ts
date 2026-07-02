@@ -82,7 +82,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       // Keep user data in the token (Credentials login)
       if (user && "_id" in user) {
-        token.id = user._id;
+        token.id = (user._id as { toString(): string }).toString();
         token.name = user.name;
         token.email = user.email;
         token.image = user.image;
