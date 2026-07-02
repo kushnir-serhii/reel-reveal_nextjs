@@ -14,7 +14,6 @@ import { useContextCountQuiz } from "@/context/CountQuizContext";
 import { Modal } from "../ui/Modal";
 import { Popup } from "./Popup";
 import { animationSection } from "@/variables/animation";
-// import { LoaderQuiz} from "../ui/loaderQuiz";
 
 interface IQuizProps {
   sessionUser: ISessionUser;

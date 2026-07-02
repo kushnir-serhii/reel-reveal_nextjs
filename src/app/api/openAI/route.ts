@@ -1,7 +1,7 @@
-'use server'
-
 import { OpenAI } from "openai";
 import { NextResponse } from "next/server";
+
+export const maxDuration = 60;
 
 export const POST = async (req: Request) => {
 
@@ -16,13 +16,15 @@ export const POST = async (req: Request) => {
   try {
     const result = await openai.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: "gpt-5-nano",
+      model: "gpt-4o",
       temperature: 1,
     });
     
     const message = result?.choices?.[0]?.message?.content
     ?.trim()
-    .replace("\n", "");
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```\s*$/i, "")
+    .trim();
     
     // console.log("RESPONSE=====>>>>>>>>>>>>>>>", result);
     if (message) {

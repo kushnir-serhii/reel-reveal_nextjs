@@ -11,13 +11,19 @@ export const fetchSimilarMovieFromOpenAI = async (
   `;
 
   try {
-    const { response } = await fetch(Back_END_URL, {
+    const res = await fetch(Back_END_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ prompt }),
-    }).then((res) => res.json());
+    });
+
+    if (!res.ok) {
+      throw new Error(`OpenAI request failed with status ${res.status}`);
+    }
+
+    const { response } = await res.json();
 
     return JSON.parse(response);
   } catch (error: any) {
