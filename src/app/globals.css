@@ -45,8 +45,12 @@
   } */
 }
 
+html {
+  @apply w-full max-w-full overflow-x-clip;
+}
+
 body {
-  @apply block max-w-full bg-bgColor text-textColor;
+  @apply relative block w-full max-w-full overflow-x-clip bg-bgColor text-textColor;
 }
 
 code {

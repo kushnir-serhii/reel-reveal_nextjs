@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Icon } from "@/app/components/ui/Icon";
 import { isAuthUserSignal } from "@/context/UserContext";
 import { useContextCountQuiz } from "@/context/CountQuizContext";
@@ -16,51 +17,64 @@ export const HeaderNavMenuMobile: React.FC<HeaderNavMenuProps> = ({
 }) => {
   
   const { count } = useContextCountQuiz();
+  const pathname = usePathname();
+
+  const profileHref = isAuth || isAuthUserSignal.value ? "/profile" : "/auth";
+  const activeClass = (...hrefs: string[]) =>
+    hrefs.includes(pathname) ? "text-accentColor" : "";
 
   return (
     <>
       <div
-        className={`absolute flex flex-col items-center justify-between w-screen bg-mobileBgGradient lg:hidden z-60
-                    transition-all duration-1000 ease-in-out py-5 md:py-10 px-4 -right-4 md:-right-16
-            
-           ${isOpenMenu ? "-top-2.5 md:-top-8 h-screen" : "-top-[710px] md:-top-[880px] h-0"}
+        id="mobile-nav-menu"
+        aria-hidden={!isOpenMenu}
+        className={`fixed inset-0 z-50 flex flex-col items-center justify-center w-full h-[100dvh]
+                    bg-mobileBgGradient backdrop-blur-xl px-4 py-5 md:py-10 lg:hidden
+                    transition-[opacity,transform] duration-300 ease-in-out
+           ${
+             isOpenMenu
+               ? "visible opacity-100 translate-y-0"
+               : "invisible opacity-0 -translate-y-4 pointer-events-none"
+           }
           `}
       >
         <button
           type="button"
           aria-label="Close nav menu"
-          onClick={() => setIsOpenMenu(!isOpenMenu)}
-          className={`absolute right-4 flex items-center justify-center w-[36px] h-[36px] rounded-[3px] bg-bgLightColor
-                     transition-all duration-300`}
+          onClick={() => setIsOpenMenu(false)}
+          className={`absolute top-[11px] right-4 flex items-center justify-center w-[36px] h-[36px] rounded-[3px] bg-bgLightColor
+                     transition-all duration-300 md:top-4 md:right-[60px]`}
         >
           <Icon id="cross" width={30} height={30} className="text-textColor" />
         </button>
-        <div className={`flex items-center flex-col gap-12 w-full my-[55%] transition-all duration-500 ease-in-out
-          ${isOpenMenu ? "h-full opacity-100" : "opacity-0 h-0"}`}>
+        <nav className={`flex items-center flex-col gap-12 w-full max-w-[343px]`}>
           <Link
             href={"/movies"}
-            onClick={() => setIsOpenMenu(!isOpenMenu)}
-            className={`link font-light leading-8 text-xl`}
+            onClick={() => setIsOpenMenu(false)}
+            aria-current={pathname === "/movies" ? "page" : undefined}
+            className="link"
           >
-            Movie search
+            <p className={activeClass("/movies")}>Movie search</p>
           </Link>
           <Link
             href={"/saved"}
-            onClick={() => setIsOpenMenu(!isOpenMenu)}
+            onClick={() => setIsOpenMenu(false)}
+            aria-current={pathname === "/saved" ? "page" : undefined}
             className="link"
           >
-            <p className="">My library</p>
+            <p className={activeClass("/saved")}>My library</p>
           </Link>
           <Link
-            href={isAuth || isAuthUserSignal.value ? "/profile" : "/auth"}
-            onClick={() => setIsOpenMenu(!isOpenMenu)}
+            href={profileHref}
+            onClick={() => setIsOpenMenu(false)}
+            aria-current={pathname === profileHref ? "page" : undefined}
             className="link"
           >
-            <p className="">Login</p>
+            <p className={activeClass("/profile", "/auth")}>Login</p>
           </Link>
           <Link
             href={"/quiz"}
-            onClick={() => setIsOpenMenu(!isOpenMenu)}
+            onClick={() => setIsOpenMenu(false)}
             className={`flex items-center justify-center gap-2 font-medium leading-5 text-xl px-5 w-full md:w-[169px] h-[40px]
             text-bgColor bg-textColor rounded-[30px] shadow-0 transition duration-250 ease-in-out
             hover:bg-accentColor hover:shadow-hoverShadow active:bg-clickedColor`}
@@ -76,12 +90,14 @@ export const HeaderNavMenuMobile: React.FC<HeaderNavMenuProps> = ({
             </span>
             <span className="">take quiz</span>
           </Link>
-        </div>
+        </nav>
       </div>
       <button
         type="button"
         aria-label="Open nav menu"
-        onClick={() => setIsOpenMenu(!isOpenMenu)}
+        aria-expanded={isOpenMenu}
+        aria-controls="mobile-nav-menu"
+        onClick={() => setIsOpenMenu(true)}
         className={`flex items-center justify-center md:w-9 h-9 rounded-[3px] bg-bgColor
                      transition-all duration-300 lg:hidden`}
       >

@@ -48,7 +48,8 @@ export const Hero: React.FC = () => {
           width={833}
           height={890}
           alt="Hero movies"
-          className={`absolute -z-10 w-auto h-auto blur-hero`}
+          className={`absolute -z-10 top-1/2 left-1/2 max-w-none w-[833px] h-auto
+            transform -translate-x-1/2 -translate-y-1/2 blur-hero pointer-events-none`}
         />
       </div>
       <AnimatePresence mode="wait" />

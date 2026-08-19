@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { HeaderNavMenuMobile } from "./HeaderNavMenuMobile";
 import { HeaderNavMenu } from "./HeaderNavMenu";
 
@@ -10,19 +10,38 @@ interface HeaderNavProps {
 
 export const HeaderNav: React.FC<HeaderNavProps> = ({ isAuth }) => {
   const [isOpenMenu, setIsOpenMenu] = useState(false);
+  const scrollPositionRef = useRef(0);
 
   useEffect(() => {
-    if (isOpenMenu) {
-      scrollY = window.scrollY;
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = "100%";
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.position = "";
-      document.body.style.top = "";
-      window.scrollTo(0, scrollY);
-    }
+    if (!isOpenMenu) return;
+
+    scrollPositionRef.current = window.scrollY;
+
+    const { body } = document;
+    body.style.position = "fixed";
+    body.style.top = `-${scrollPositionRef.current}px`;
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+
+    return () => {
+      body.style.position = "";
+      body.style.top = "";
+      body.style.width = "";
+      body.style.overflow = "";
+      window.scrollTo(0, scrollPositionRef.current);
+    };
+  }, [isOpenMenu]);
+
+  useEffect(() => {
+    if (!isOpenMenu) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpenMenu(false);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpenMenu]);
 
   return (
