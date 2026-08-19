@@ -1,5 +1,5 @@
 import dynamic from "next/dynamic";
-import { getSessionUser } from "@/utils";
+import { getSessionUser } from "@/utils/getSessionUser";
 
 const SavedMoviesDynamics = dynamic(() =>
   import("@/app/components/savedMovies/SavedMovies").then(

@@ -1,4 +1,3 @@
-export { fetchSimilarMovieFromOpenAI } from "./fetchSimilarMovieFromOpenAI";
 export { fetchQuizDataFromOpenAI } from "./fetchQuizDataFromOpenAI";
 export { fetcher } from "./fetcher";
 export { updateMovieInDB } from "./updateMovieInDB";

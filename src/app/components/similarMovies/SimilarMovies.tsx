@@ -1,59 +1,53 @@
-"use client";
-
+import { getSimilarMoviesByAI } from "@/app/services";
 import { GetShowMovies } from "@/app/components/getShowMovies/GetShowMovies";
-import { Loader } from "../ui/Loader";
-import useSWR from "swr";
-import { ButtonOrLink } from "@/app/components/ui/ButtonOrLink";
-import { fetchMovieDataFromAPI } from "@/app/actions/fetchMovieDataFromAPI";
+import { MovieCardSkeleton } from "@/app/components/movieCard/MovieCardSkeleton";
 import { ISessionUser } from "@/typification";
 
 export interface SimilarMoviesProps {
-  title?: string;
+  title: string;
+  year: string;
   movieId: number;
   sessionUser: ISessionUser;
 }
-export const SimilarMovies: React.FC<SimilarMoviesProps> = ({
+
+// Server component: the AI suggestions and their TMDB lookups run once per
+// movie and are then served from the cache to everybody.
+export const SimilarMovies = async ({
   title,
+  year,
   movieId,
   sessionUser,
-}) => {
-  const {
-    data: similarMovies,
-    error,
-    isValidating,
-    mutate,
-  } = useSWR(
-    movieId ? `similar-${movieId}` : null,
-    () => fetchMovieDataFromAPI("/api/movies/similar", { movieId }),
-    {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      shouldRetryOnError: false,
-      dedupingInterval: 60000, // Dedupe for 1 minute
-    }
-  );
+}: SimilarMoviesProps) => {
+  if (!title) return null;
 
-  if (isValidating) return <Loader />;
+  let movies;
 
-  if (error) {
-    return (
-      <ButtonOrLink onClick={() => mutate()} className="">
-        Reload Similar Movies
-      </ButtonOrLink>
-    );
+  try {
+    movies = await getSimilarMoviesByAI(title, year, movieId);
+  } catch (error) {
+    // Recommendations are a bonus section - if the AI or TMDB is unavailable we
+    // hide it rather than failing the whole movie page.
+    console.error("Failed to build similar movies:", error);
+    return null;
   }
 
+  if (!movies.length) return null;
+
   return (
-    <>
-      {similarMovies && similarMovies.length > 0 ? (
-        <GetShowMovies
-          title={"Similar movies"}
-          movies={similarMovies}
-          sessionUser={sessionUser}
-        />
-      ) : (
-        <></>
-      )}
-    </>
+    <GetShowMovies
+      title={"Similar movies picked by AI"}
+      movies={movies}
+      sessionUser={sessionUser}
+    />
   );
 };
+
+
+export const SimilarMoviesSkeleton: React.FC = () => (
+  <section className="flex flex-col items-center gap-12 w-full xl:max-w-[1440px]">
+    <h2>Similar movies</h2>
+    <div className="max-w-[1200px] w-full">
+      <MovieCardSkeleton count={4} />
+    </div>
+  </section>
+);

@@ -1,10 +1,10 @@
-import { OpenAiResponse } from "@/typification";
+import { MovieTitleYear } from "@/typification";
 
 const Back_END_URL = "/api/openAI";
 
 export const fetchQuizDataFromOpenAI = async (
   requestArray: string[]
-): Promise<OpenAiResponse> => {
+): Promise<MovieTitleYear[]> => {
   const mood = requestArray[0];
   const watchingWith = requestArray[1];
   const genre = requestArray[2];

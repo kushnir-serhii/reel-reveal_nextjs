@@ -1,7 +1,6 @@
 
 export type DeviceType = "mobile" | "tablet" | "desktop";
 
-export type OpenAiResponse = string[];
 export type Actor = {
   adult: boolean;
   cast_id: number;
@@ -18,3 +17,5 @@ export type Actor = {
 };
 
 export type FilterArray = (string | number)[]
+
+export type MovieTitleYear = { title: string; year: string };

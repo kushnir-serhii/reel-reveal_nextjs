@@ -15,7 +15,7 @@ const BOT_UA = [
   "Bytespider",
 ];
 
-export async function middleware(req: NextRequest) {
+export default async function proxy(req: NextRequest) {
   const ua = req.headers.get("user-agent") || "";
 
   // 1. Block known bots at the edge (before any expensive work)

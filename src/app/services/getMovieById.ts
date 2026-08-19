@@ -1,24 +1,20 @@
 import { IMovie } from "@/typification";
 
-export const getMovieById = async (id: number): Promise<IMovie> => {
-  const token = process.env.BEARER_TOKEN_TMDB;
-  const url = `https://api.themoviedb.org/3/movie/${id}`;
+// Returns null when TMDB has no such movie, throws on any other failure so the
+// route can answer with a 404 page / the error boundary instead of blank markup.
+export const getMovieById = async (id: number): Promise<IMovie | null> => {
+  const response = await fetch(`https://api.themoviedb.org/3/movie/${id}`, {
+    next: { revalidate: 3600 },
+    headers: {
+      Authorization: `Bearer ${process.env.BEARER_TOKEN_TMDB}`,
+    },
+  });
 
-  try {
-    const response = await fetch(url, {
-      next: { revalidate: 3600 },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }).then((res) => res.json());
+  if (response.status === 404) return null;
 
-    if (!response) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    return response as IMovie;
-  } catch (error: any) {
-    console.error("Fetch error:", error);
-    return {} as IMovie;
+  if (!response.ok) {
+    throw new Error(`TMDB movie request failed: ${response.status}`);
   }
+
+  return (await response.json()) as IMovie;
 };

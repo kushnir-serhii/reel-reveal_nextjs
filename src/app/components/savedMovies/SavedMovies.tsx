@@ -5,6 +5,7 @@ import Image from "next/image";
 import useSWR from "swr";
 import { ButtonOrLink } from "../ui/ButtonOrLink";
 import { ListMovies } from "@/app/components/listMovies/ListMovies";
+import { MovieCardSkeleton } from "@/app/components/movieCard/MovieCardSkeleton";
 import { Loader } from "../ui/Loader";
 import { fetcher } from "../../actions";
 import { useMoviesContext } from "@/context/ServiceMoviesContext";
@@ -37,7 +38,7 @@ export const SavedMovies: React.FC<SavedMoviesProps> = React.memo(
       setMovies(data?.movies);
     }, [data, data?.movies.length, error]);
 
-    if (movies === null) return <Loader />;
+    if (movies === null) return <MovieCardSkeleton count={4} />;
     return (
       <div
         className={`flex items-center flex-col justify-center gap-12 w-full mb-20 ${movies?.length ? "z-10" : "z-20"} `}

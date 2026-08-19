@@ -3,7 +3,7 @@ import dynamic from "next/dynamic";
 import { Header } from "@/app/components/header/Header";
 import { Footer } from "@/app/components/footer/Footer";
 import { Loader } from "@/app/components/ui/Loader";
-import { getSessionUser } from "@/utils";
+import { getSessionUser } from "@/utils/getSessionUser";
 import Image from "next/image";
 
 const DynamicServiceMoviesProvider = dynamic(() =>

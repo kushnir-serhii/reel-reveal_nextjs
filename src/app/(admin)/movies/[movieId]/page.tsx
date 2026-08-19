@@ -1,81 +1,64 @@
-import dynamic from "next/dynamic";
+import { Suspense } from "react";
+import { notFound } from "next/navigation";
 import { MovieInfo } from "@/app/components/movieInfo/MovieInfo";
-import { getMovieById, getTopRatedMovies, getUpcomingMovies } from "@/app/services";
-import { getSessionUser } from "@/utils";
+import {
+  MovieInfoCast,
+  MovieInfoCastSkeleton,
+} from "@/app/components/movieInfo/MovieInfoCast";
+import { MovieInfoTrailerSection } from "@/app/components/movieInfo/MovieInfoTrailerSection";
+import { MovieInfoTrailerSkeleton } from "@/app/components/movieInfo/MovieInfoTrailerFrame";
+import {
+  SimilarMovies,
+  SimilarMoviesSkeleton,
+} from "@/app/components/similarMovies/SimilarMovies";
+import { SliderCarousel } from "@/app/components/sliderCarousel/SliderCarousel";
+import { getMovieById } from "@/app/services";
+import { getSessionUser } from "@/utils/getSessionUser";
 
-// Pre-generate top and upcoming movie pages at build time
-export async function generateStaticParams() {
-  const [topRated, upcoming] = await Promise.all([
-    getTopRatedMovies(),
-    getUpcomingMovies(),
-  ]);
-
-  // Combine and dedupe movie IDs
-  const movieIds = new Set([
-    ...topRated.map((m) => m.id),
-    ...upcoming.map((m) => m.id),
-  ]);
-
-  return Array.from(movieIds).map((id) => ({
-    movieId: String(id),
-  }));
-}
-
-// Enable ISR with 1 hour revalidation for dynamic pages
-export const revalidate = 3600;
-
-const DynamicSimilarMovies = dynamic(() =>
-  import("@/app/components/similarMovies/SimilarMovies").then(
-    (mod) => mod.SimilarMovies
-  )
-);
-
-const DynamicSliderCarousel = dynamic(() =>
-  import("@/app/components/sliderCarousel/SliderCarousel").then((mod) => mod.SliderCarousel)
-);
-
-const DynamicMovieInfoCast = dynamic(() =>
-  import("@/app/components/movieInfo/MovieInfoCast").then(
-    (mod) => mod.MovieInfoCast
-  )
-);
-
-const DynamicMovieInfoTrailer = dynamic(() =>
-  import("@/app/components/movieInfo/MovieInfoTrailer").then(
-    (mod) => mod.MovieInfoTrailer
-  )
-);
-
-export default async function OneMoviePage(props: {
-  params: Promise<{ movieId: number }>;
+export default async function OneMoviePage({
+  params,
+}: {
+  params: Promise<{ movieId: string }>;
 }) {
-  const params = await props.params;
-  const { movieId } = params;
+  const { movieId } = await params;
 
-  const sessionUser = await getSessionUser();
+  // Route params are always strings, so validate before hitting TMDB.
+  const id = Number(movieId);
+  if (!Number.isInteger(id) || id <= 0) notFound();
 
-  const movie = await getMovieById(movieId);
+  const [sessionUser, movie] = await Promise.all([
+    getSessionUser(),
+    getMovieById(id),
+  ]);
 
-  const { title, original_title } = movie;
+  if (!movie) notFound();
+
+  const { title, original_title, release_date } = movie;
+
+  const releaseYear = release_date ? String(release_date).slice(0, 4) : "";
 
   return (
-    <div className="flex flex-col items-center overflow-hidden md:pt-0 lg:pt-0 gap-0 md:gap-0">
+    <div className="flex flex-col items-center overflow-hidden">
       <MovieInfo movie={movie} />
       <div className="page-wrapper">
-        <div className="w-full flex items-center justify-center">
-
-        <DynamicMovieInfoTrailer id={movieId} />
+        <div className="flex items-center justify-center w-full">
+          <Suspense fallback={<MovieInfoTrailerSkeleton />}>
+            <MovieInfoTrailerSection id={id} />
+          </Suspense>
         </div>
-        <div
-          className={`flex items-center justify-center flex-col w-full gap-16 md:gap-20 xl:gap-30`}
-        >
-          <DynamicMovieInfoCast id={movieId} />
-          <DynamicSimilarMovies
-            movieId={movieId}
-            title={title ?? original_title}
-            sessionUser={sessionUser}
-          />
-          <DynamicSliderCarousel />
+        <div className="flex items-center justify-center flex-col w-full gap-16 md:gap-20 xl:gap-30">
+          <Suspense fallback={<MovieInfoCastSkeleton />}>
+            <MovieInfoCast id={id} />
+          </Suspense>
+          <Suspense fallback={<SimilarMoviesSkeleton />}>
+            <SimilarMovies
+              movieId={id}
+              title={title ?? original_title}
+              year={releaseYear}
+              sessionUser={sessionUser}
+            />
+          </Suspense>
+          <SliderCarousel />
         </div>
       </div>
     </div>

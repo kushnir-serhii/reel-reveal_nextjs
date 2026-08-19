@@ -2,7 +2,7 @@ import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import { Genres } from "@/app/components/genres/Genres";
 import { Loader } from "@/app/components/ui/Loader";
-import { getSessionUser } from "@/utils";
+import { getSessionUser } from "@/utils/getSessionUser";
 
 const MovieSearchDynamics = dynamic(() =>
   import("@/app/components/movieSearch/MovieSearch").then(

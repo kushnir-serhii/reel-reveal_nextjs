@@ -1,27 +1,34 @@
-import { IMovie } from "@/typification";
+import { IMovie, MovieTitleYear } from "@/typification";
 
+// Searches TMDB for each { title, year } pair and returns one result list per
+// pair (same order as the input).
 export const getManyMoviesByTitle = async (
-  arrMovies: {title:string, year:string}[]
+  arrMovies: MovieTitleYear[]
 ): Promise<IMovie[][]> => {
-  const API_TOKEN = process.env.BEARER_TOKEN_TMDB;
+  const token = process.env.BEARER_TOKEN_TMDB;
 
-  try {
-    const requests = arrMovies.map(({ title, year }) =>
-      fetch(
-        `https://api.themoviedb.org/3/search/movie?query=${title}&year=${year}`,
-        {
-          headers: {
-            Authorization: `Bearer ${API_TOKEN}`,
-          },
-        }
-      ).then((res) => res.json())
+  const requests = arrMovies.map(async ({ title, year }) => {
+    const params = new URLSearchParams({ query: title, language: "en-US" });
+    if (year) params.set("year", year);
+
+    const response = await fetch(
+      `https://api.themoviedb.org/3/search/movie?${params}`,
+      {
+        next: { revalidate: 86400 },
+        headers: { Authorization: `Bearer ${token}` },
+      }
     );
 
-    const response = await Promise.all(requests);
-    
-    return response.map(({ results }) => results);
-  } catch (error: any) {
-    console.log("getManyMoviesByTitle error", error?.message);
-    return error;
-  }
+    // A single failed lookup must not sink the whole batch.
+    if (!response.ok) {
+      console.error(`TMDB search failed for "${title}": ${response.status}`);
+      return [] as IMovie[];
+    }
+
+    const data = await response.json();
+
+    return (data.results ?? []) as IMovie[];
+  });
+
+  return Promise.all(requests);
 };

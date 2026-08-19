@@ -3,10 +3,10 @@
 import { useState } from "react";
 import Image from "next/image";
 import { toast } from "react-toastify";
-import ContentLoader from "react-content-loader";
 import { Modal } from "../ui/Modal";
 import { MovieInfoTrailer } from "../movieInfo/MovieInfoTrailer";
 import { MovieCardHover } from "./MovieCardHover";
+import { MovieCardSkeleton } from "./MovieCardSkeleton";
 import { IMovie } from "@/typification";
 import { useOpenUrl, useResize } from "@/hooks";
 import { useMoviesContext } from "@/context/ServiceMoviesContext";
@@ -120,15 +120,7 @@ const handleMouseEvent = (e: React.MouseEvent<HTMLDivElement>) => {
             className={`w-full h-full rounded-[18px]`}
           />
         ) : (
-          <ContentLoader
-            animate={true}
-            viewBox="0 0 285 428"
-            backgroundColor="#20263D"
-            foregroundColor="#318b83"
-            className={`w-full h-full rounded-[18px]`}
-          >
-            <rect x="0" y="0" rx="18" ry="18" width="285" height="428" />
-          </ContentLoader>
+          <MovieCardSkeleton />
         )}
       </div>
 

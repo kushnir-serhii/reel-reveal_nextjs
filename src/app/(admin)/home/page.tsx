@@ -2,7 +2,7 @@ import dynamic from "next/dynamic";
 import { Hero } from "@/app/components/hero/Hero";
 import { HowItWorks } from "@/app/components/howItWorks/HowItWorks";
 import { getTopRatedMovies, getUpcomingMovies } from "@/app/services";
-import { getSessionUser } from "@/utils";
+import { getSessionUser } from "@/utils/getSessionUser";
 
 const DynamicQuiz = dynamic(() =>
   import("../../components/quiz/Quiz").then((mod) => mod.Quiz)
