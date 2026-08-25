@@ -1,13 +1,10 @@
-import { NextResponse } from "next/server";
-
 /**
- * Fetches a user by email.
+ * Checks whether a user with the given email is registered.
  *
- * @param {string} email - The email of the user to fetch.
- * @returns {Promise<object>} A promise that resolves to the user object.
+ * @param {string} email - The email of the user to check.
+ * @returns {Promise<boolean>} A promise that resolves to true if a user with that email exists.
  */
-export const fetchUserByEmail = async (email: string) => {
-  
+export const fetchUserByEmail = async (email: string): Promise<boolean> => {
   try {
     const response = await fetch("/api/auth/get-user_by-email", {
       method: "POST",
@@ -17,15 +14,12 @@ export const fetchUserByEmail = async (email: string) => {
       body: JSON.stringify({ email }),
     });
 
-    const { existingUser } = await response.json();
-    
-    return NextResponse.json({ user: existingUser });
+    const { exists } = await response.json();
+
+    return Boolean(exists);
   } catch (error) {
     console.error("Error fetching user by email:", error);
 
-    return NextResponse.json({
-      message: "Error fetching user by email",
-      error,
-    });
+    return false;
   }
 };

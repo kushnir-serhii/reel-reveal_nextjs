@@ -33,20 +33,16 @@ const [isSubmited, setIsSubmited] = useState(false);
     setIsLoading(true);
 
     try {
-      const response = await fetchUserByEmail(data.email).then((res) =>
-        res.json()
-      );
+      const exists = await fetchUserByEmail(data.email);
 
-      if (!response.user) {
+      if (!exists) {
         userEmailSignal.value = data.email;
 
         return setStatusUser("register");
       }
 
-      if (response.user) {
-        setStatusUser("signup");
-        userEmailSignal.value = response.user.email;
-      }
+      setStatusUser("signup");
+      userEmailSignal.value = data.email;
     } catch (error) {
       console.log(error);
     } finally {
