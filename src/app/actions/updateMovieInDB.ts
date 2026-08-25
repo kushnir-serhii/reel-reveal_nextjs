@@ -7,7 +7,7 @@ export const updateMovieInDB = async (userId: string, movie: IMovieInDB) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ userId, movie }),
+      body: JSON.stringify({ movie }),
     });
 
     // console.log("RES_IN_SAVE_MOVIE_>>>>>>>>>>>>>>>>>>>>>>>>>>>",res)

@@ -1,12 +1,11 @@
 import useSWR from "swr";
 
-const fetcher = async (url: string, userId?: string) => {
+const fetcher = async (url: string) => {
   const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ userId }),
   });
 
   if (!response.ok) {
@@ -24,7 +23,7 @@ export const useMovies = (userId: string | undefined) => {
 
   const { data, error, mutate, isValidating, isLoading } = useSWR(
     userId ? `/api/get-all-liked_movies` : null, // Only fetch if `userId` is valid
-    () => fetcher(`/api/get-all-liked_movies`, userId),
+    () => fetcher(`/api/get-all-liked_movies`),
     {
       fallbackData,
       onSuccess: (data) => {

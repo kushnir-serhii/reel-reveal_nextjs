@@ -2,9 +2,16 @@ import { NextResponse } from "next/server";
 import User from "@/db/models/user";
 import { connectDB } from "@/db/db";
 import { IStoredMovie } from "@/typification";
+import { auth } from "@/auth";
 
 export const POST = async (req: Request) => {
-  const { movie, userId } = await req.json();
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+  const userId = session.user.id;
+
+  const { movie } = await req.json();
 
   try {
     await connectDB();
@@ -42,5 +49,6 @@ export const POST = async (req: Request) => {
 
   } catch (error) {
     console.log(error);
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 };

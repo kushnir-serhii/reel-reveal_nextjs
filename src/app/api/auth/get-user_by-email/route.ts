@@ -19,21 +19,14 @@ export async function POST(req: Request): Promise<NextResponse> {
     // Extract the email from the request body
     const { email } = await req.json();
 
-    // Find a user with the provided email in the database
-    const existingUser = await User.findOne({ email });
+    // Check whether a user with the provided email exists, without loading the document
+    const exists = await User.exists({ email });
 
-    // If no user is found, return a JSON response with a message indicating that the user is not found
-    if (!existingUser) {
-      return NextResponse.json(
-        { message: "User not found" },
-        {
-          status: 404,
-        }
-      );
+    if (!exists) {
+      return NextResponse.json({ exists: false }, { status: 200 });
     }
 
-    // If a user is found, return a JSON response with a message indicating that the user exists
-    return NextResponse.json({ existingUser });
+    return NextResponse.json({ exists: true });
   } catch (error) {
     // Return a JSON response with a message indicating a server error
     return NextResponse.json(
