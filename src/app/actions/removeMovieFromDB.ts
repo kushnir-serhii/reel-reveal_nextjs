@@ -5,7 +5,7 @@ export const removeMovieFromDB = async (userId: string, movieId: number) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ userId, movieId }),
+      body: JSON.stringify({ movieId }),
     });
     if (!res.ok) {
       throw new Error("Failed to remove movie");

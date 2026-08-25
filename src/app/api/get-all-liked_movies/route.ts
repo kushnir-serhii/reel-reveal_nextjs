@@ -1,14 +1,16 @@
 import { connectDB } from "@/db/db";
 import User from "@/db/models/user";
 import { NextResponse, type NextRequest } from "next/server";
+import { auth } from "@/auth";
 
 export async function POST(req: NextRequest) {
-  const { userId } = await req.json();
-  try {
-    if (!userId) {
-      return NextResponse.json({ error: "Missing userId" }, { status: 400 });
-    }
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+  const userId = session.user.id;
 
+  try {
     // Validate userId
     const mongoose = require("mongoose");
     const objectId = mongoose.Types.ObjectId;
