@@ -2,11 +2,14 @@
 
 import { signIn, signOut } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { safeRedirect } from "@/utils/safeRedirect";
 
 export async function socialLogin(formData: FormData) {
     const action = formData.get("action") as string;
     
-  const response = await signIn(action, { redirectTo: "/home" });
+  const redirectTo = safeRedirect(formData.get("redirectTo"));
+
+  await signIn(action, { redirectTo });
 }
 
 export async function doCredentialLogin(userData: {email:string, password:string}) {

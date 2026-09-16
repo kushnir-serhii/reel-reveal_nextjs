@@ -13,6 +13,8 @@ export interface IUser extends Document {
   avatarURL?: string;
   googleId: string;
   token?: string;
+  aiCredits: number;
+  paidIntents: string[];
   isModified: (path: string) => boolean; // This is a Mongoose method available in documents.
 }
 
@@ -46,6 +48,9 @@ const userSchema = new Schema(
       enum: Object.values(userRolesEnum),
       default: userRolesEnum.USER,
     },
+    aiCredits: { type: Number, default: 0, min: 0 },
+    // Stripe PaymentIntent ids already credited, so a payment counts once.
+    paidIntents: { type: [String], default: [], select: false },
     movies: [
       {
         movieId: {

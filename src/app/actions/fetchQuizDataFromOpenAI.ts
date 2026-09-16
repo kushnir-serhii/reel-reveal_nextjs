@@ -1,4 +1,4 @@
-import { MovieTitleYear } from "@/typification";
+import { AiLimitError, MovieTitleYear } from "@/typification";
 
 const Back_END_URL = "/api/openAI";
 
@@ -40,24 +40,23 @@ export const fetchQuizDataFromOpenAI = async (
   {title:"title", year:"year"},{title:"title", year:"year"},{title:"title", year:"year"},{title:"title", year:"year"},]  
  Do not include any additional text or explanation.`;
 
-  try {
-    const res = await fetch(Back_END_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ prompt }),
-    });
+  const res = await fetch(Back_END_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ prompt }),
+  });
 
-    if (!res.ok) {
-      throw new Error(`OpenAI request failed with status ${res.status}`);
-    }
-
-    const { response } = await res.json();
-// console.log("RESPONSE=================================>>>>>>>>>>", response)
-    return JSON.parse(response);
-  } catch (error: any) {
-    console.log("Error fetching data from OpenAI API:", error.message);
-    throw new Error("Failed to fetch quiz data from OpenAI");
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    const error: AiLimitError = new Error(
+      data?.error || `OpenAI request failed with status ${res.status}`
+    );
+    error.code = data?.code;
+    throw error;
   }
+
+  const { response } = await res.json();
+  return JSON.parse(response);
 };

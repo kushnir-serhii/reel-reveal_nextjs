@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Browse movies</title>
+<meta name="description" content="Movie search prototype: sticky filter bar, dense poster grid, result count, loading and empty states.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://image.tmdb.org">
+<style>
+/* ===== Reel Reveal: "Late show" tokens ===== */
+:root {
+  --bg: #22151F;        /* auditorium: plum-black, the room after the lights go down */
+  --surface: #301E2B;   /* velvet: panels, inputs */
+  --raised: #3C2737;    /* seat: hover surfaces, chips */
+  --line: #4E3647;      /* rules and borders */
+  --text: #F3EEE7;      /* screen: projected white, slightly warm */
+  --muted: #BCAAB3;     /* program notes */
+  --dim: #A08B97;       /* captions (bg / surface only) */
+  --accent: #F4B942;    /* tungsten: marquee bulb */
+  --accent-press: #DDA02A;
+  --on-accent: #22151F;
+  --danger: #FF6B57;    /* exit sign */
+  --ok: #8FD19E;
+
+  --display: "Big Shoulders Display", "Arial Narrow", sans-serif;
+  --body: "Instrument Sans", system-ui, -apple-system, sans-serif;
+
+  --r-poster: 3px;
+  --r-ui: 10px;
+  --r-pill: 999px;
+
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px;
+  --s6: 32px; --s7: 48px; --s8: 72px; --s9: 112px;
+
+  --gutter: clamp(16px, 5vw, 72px);
+  --max: 1320px;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --header-h: 64px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--header-h) + 16px); }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 400 16px/1.55 var(--body);
+  -webkit-font-smoothing: antialiased; overflow-x: clip;
+}
+img { display: block; max-width: 100%; }
+a { color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
+h1, h2, h3, h4, p, ul, ol, dl, dd, figure { margin: 0; padding: 0; }
+ul, ol { list-style: none; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip { position: absolute; left: 16px; top: -60px; z-index: 100; background: var(--accent); color: var(--on-accent); padding: 8px 14px; border-radius: var(--r-ui); font-weight: 600; }
+.skip:focus { top: 12px; }
+
+/* ----- type ----- */
+.display-xl { font: 800 clamp(56px, 10vw, 136px)/.86 var(--display); letter-spacing: -.01em; }
+.display-l  { font: 800 clamp(44px, 7vw, 96px)/.9 var(--display); letter-spacing: -.005em; }
+.display-m  { font: 700 clamp(34px, 4.4vw, 56px)/.95 var(--display); }
+.h-section  { font: 700 clamp(28px, 3.2vw, 40px)/1 var(--display); }
+.h-card     { font: 600 17px/1.3 var(--body); }
+.lede       { font-size: clamp(17px, 1.6vw, 20px); line-height: 1.55; color: var(--muted); max-width: 58ch; }
+.muted { color: var(--muted); }
+.dim { color: var(--dim); }
+.small { font-size: 14px; }
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* ----- layout ----- */
+.wrap { width: 100%; max-width: calc(var(--max) + 2 * var(--gutter)); margin-inline: auto; padding-inline: var(--gutter); }
+.section { padding-block: clamp(48px, 7vw, 96px); }
+.section-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s4); margin-bottom: var(--s5); }
+.section-head a { color: var(--muted); text-decoration: none; font-weight: 500; white-space: nowrap; }
+.section-head a:hover { color: var(--accent); }
+main { min-height: 60vh; }
+
+/* ----- buttons ----- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--s2);
+  min-height: 44px; padding: 0 20px; border-radius: var(--r-ui);
+  font-weight: 600; font-size: 15px; text-decoration: none; cursor: pointer;
+  border: 1px solid transparent; transition: background .15s, border-color .15s, color .15s, transform .1s;
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--accent); color: var(--on-accent); }
+.btn-primary:hover { background: #FFC95C; }
+.btn-primary:active { background: var(--accent-press); }
+.btn-ghost { background: transparent; border-color: var(--line); color: var(--text); }
+.btn-ghost:hover { border-color: var(--text); }
+.btn-ghost[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.btn-quiet { background: transparent; color: var(--muted); padding-inline: 8px; }
+.btn-quiet:hover { color: var(--text); }
+.btn-danger { background: transparent; border-color: color-mix(in srgb, var(--danger) 50%, transparent); color: var(--danger); }
+.btn-danger:hover { background: color-mix(in srgb, var(--danger) 12%, transparent); }
+.btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; }
+.btn-lg { min-height: 52px; padding: 0 26px; font-size: 16px; }
+.btn .count { font-variant-numeric: tabular-nums; padding: 2px 7px; border-radius: 6px; background: rgba(34,21,31,.14); font-size: 13px; }
+.icon { width: 18px; height: 18px; flex: none; }
+
+/* ----- header ----- */
+.site-header {
+  position: sticky; top: 0; z-index: 30; height: var(--header-h);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
+  backdrop-filter: saturate(1.2) blur(8px);
+}
+.site-header .wrap { height: 100%; display: flex; align-items: center; gap: var(--s5); }
+.logo { font: 800 26px/1 var(--display); text-decoration: none; letter-spacing: .01em; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.logo svg { width: 22px; height: 22px; color: var(--accent); }
+.search { flex: 1; max-width: 420px; position: relative; }
+.search input {
+  width: 100%; height: 40px; padding: 0 14px 0 40px; border-radius: var(--r-ui);
+  background: var(--surface); border: 1px solid transparent; outline: none;
+}
+.search input::placeholder { color: var(--dim); }
+.search input:hover { border-color: var(--line); }
+.search input:focus-visible { border-color: var(--accent); outline: none; }
+.search svg { position: absolute; left: 12px; top: 11px; width: 18px; height: 18px; color: var(--dim); pointer-events: none; }
+.nav { margin-left: auto; display: flex; align-items: center; gap: var(--s5); }
+.nav a:not(.btn) { text-decoration: none; color: var(--muted); font-weight: 500; padding: 6px 0; border-bottom: 2px solid transparent; }
+.nav a:not(.btn):hover { color: var(--text); }
+.nav a:not(.btn)[aria-current="page"] { color: var(--text); border-bottom-color: var(--accent); }
+.menu-btn { display: none; margin-left: auto; background: none; border: 1px solid var(--line); border-radius: var(--r-ui); width: 44px; height: 40px; cursor: pointer; }
+@media (max-width: 900px) {
+  .nav { display: none; }
+  .menu-btn { display: inline-grid; place-items: center; }
+  .search { max-width: none; }
+  .logo span { display: none; }
+  body.menu-open .nav {
+    display: flex; flex-direction: column; align-items: stretch; gap: 0;
+    position: fixed; inset: var(--header-h) 0 auto 0; background: var(--bg);
+    padding: var(--s4) var(--gutter) var(--s6); border-bottom: 1px solid var(--line);
+  }
+  body.menu-open .nav a:not(.btn) { font: 700 34px/1.3 var(--display); color: var(--text); border: 0; }
+  body.menu-open .nav .btn { margin-top: var(--s4); }
+}
+
+/* ----- poster card ----- */
+.poster { position: relative; display: block; text-decoration: none; }
+.poster .frame {
+  position: relative; aspect-ratio: 2 / 3; border-radius: var(--r-poster); overflow: hidden;
+  background: var(--surface); transition: transform .25s var(--ease);
+}
+.poster .frame img { width: 100%; height: 100%; object-fit: cover; }
+.frame.noimg::after, .noimg::after {
+  content: attr(data-title); position: absolute; inset: 0; display: grid; place-items: end start; padding: 14px;
+  font: 700 22px/1 var(--display); color: var(--muted);
+  background: repeating-linear-gradient(135deg, var(--surface) 0 12px, var(--raised) 12px 13px);
+}
+.poster .meta { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s2); margin-top: 10px; }
+.poster .title { font-weight: 600; font-size: 15px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.poster .year { color: var(--dim); font-size: 14px; font-variant-numeric: tabular-nums; }
+.rating { display: inline-flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 14px; }
+.rating svg { width: 13px; height: 13px; color: var(--accent); }
+.poster .actions {
+  position: absolute; top: 8px; right: 8px; display: flex; flex-direction: column; gap: 6px;
+  opacity: 0; transform: translateY(-4px); transition: opacity .15s, transform .15s;
+}
+.poster:hover .frame, .poster:focus-within .frame { transform: translateY(-4px); }
+.poster:hover .actions, .poster:focus-within .actions { opacity: 1; transform: none; }
+@media (hover: none) { .poster .actions { opacity: 1; transform: none; } }
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  background: rgba(34, 21, 31, .82); border: 1px solid rgba(243, 238, 231, .22); color: var(--text);
+  transition: background .15s, color .15s, border-color .15s;
+}
+.icon-btn:hover { border-color: var(--text); }
+.icon-btn[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.icon-btn svg { width: 17px; height: 17px; }
+.poster .stretched { position: absolute; inset: 0; z-index: 0; }
+.poster .actions { z-index: 2; }
+
+/* ----- rails & grids ----- */
+.rail {
+  display: grid; grid-auto-flow: column; grid-auto-columns: clamp(140px, 42vw, 200px);
+  gap: var(--s5); overflow-x: auto; scroll-snap-type: x mandatory; padding: 6px 2px 14px;
+  scrollbar-width: thin; scrollbar-color: var(--line) transparent;
+}
+.rail > * { scroll-snap-align: start; }
+@media (min-width: 1100px) { .rail { grid-auto-columns: calc((100% - 5 * 24px) / 6); } }
+.rail-nav { display: flex; gap: var(--s2); }
+@media (max-width: 760px) { .rail-nav { display: none; } }
+.grid-posters { display: grid; gap: 32px 20px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+@media (min-width: 1100px) { .grid-posters { grid-template-columns: repeat(6, 1fr); } }
+
+/* ----- chips / fields ----- */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px;
+  border-radius: var(--r-pill); border: 1px solid var(--line); background: transparent;
+  color: var(--muted); text-decoration: none; cursor: pointer; font-size: 14px; font-weight: 500;
+}
+.chip:hover { color: var(--text); border-color: var(--muted); }
+.chip[aria-pressed="true"], .chip.is-on { background: var(--text); color: var(--bg); border-color: var(--text); }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 14px; font-weight: 500; color: var(--muted); }
+.input, .select {
+  height: 46px; padding: 0 14px; border-radius: var(--r-ui); background: var(--surface);
+  border: 1px solid var(--line); outline: none; width: 100%;
+}
+.input:hover, .select:hover { border-color: var(--muted); }
+.input:focus-visible, .select:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); outline: none; }
+.input[aria-invalid="true"] { border-color: var(--danger); }
+.field .hint { font-size: 13px; color: var(--dim); }
+.field .error { font-size: 13px; color: var(--danger); }
+.select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%23BCAAB3' stroke-width='1.6'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+
+/* ----- footer ----- */
+.site-footer { border-top: 1px solid var(--line); margin-top: var(--s8); padding-block: var(--s7) var(--s6); }
+.site-footer .wrap { display: grid; gap: var(--s6); grid-template-columns: 1.4fr 1fr 1fr; }
+.site-footer h2 { font: 700 20px/1 var(--display); margin-bottom: var(--s3); }
+.site-footer li a { display: inline-block; padding: 5px 0; color: var(--muted); text-decoration: none; }
+.site-footer li a:hover { color: var(--text); }
+.site-footer .legal { grid-column: 1 / -1; display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--s3); color: var(--dim); font-size: 14px; padding-top: var(--s5); border-top: 1px solid var(--line); }
+@media (max-width: 700px) { .site-footer .wrap { grid-template-columns: 1fr 1fr; } .site-footer .brand { grid-column: 1 / -1; } }
+
+/* ----- chat ----- */
+.chat-launch {
+  position: fixed; right: 20px; bottom: 20px; z-index: 40;
+  display: inline-flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 18px 0 14px;
+  border-radius: var(--r-pill); background: var(--text); color: var(--bg); border: 0; cursor: pointer;
+  font-weight: 600; box-shadow: 0 10px 30px rgba(0, 0, 0, .35); transition: transform .15s var(--ease);
+}
+.chat-launch:hover { transform: translateY(-2px); }
+.chat-launch svg { width: 20px; height: 20px; }
+body.chat-open .chat-launch { display: none; }
+.chat {
+  position: fixed; z-index: 50; top: 0; right: 0; bottom: 0; width: min(440px, 100%);
+  background: var(--surface); border-left: 1px solid var(--line);
+  display: flex; flex-direction: column; transform: translateX(100%); visibility: hidden;
+  transition: transform .28s var(--ease), visibility 0s linear .28s;
+  box-shadow: -24px 0 60px rgba(0, 0, 0, .35);
+}
+body.chat-open .chat { transform: none; visibility: visible; transition: transform .28s var(--ease); }
+.chat-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.chat-head h2 { font: 700 28px/1 var(--display); }
+.quota { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+.quota .bar { flex: 1; height: 4px; background: var(--raised); border-radius: 2px; overflow: hidden; }
+.quota .bar i { display: block; height: 100%; background: var(--accent); }
+.chat-log { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 18px; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.msg-ai { max-width: 94%; line-height: 1.55; }
+.msg-user { align-self: flex-end; max-width: 85%; background: var(--raised); padding: 10px 14px; border-radius: 12px 12px 3px 12px; }
+.chat-empty p { color: var(--muted); margin-bottom: 14px; }
+.prompts { display: flex; flex-direction: column; gap: 8px; }
+.prompt { text-align: left; background: transparent; border: 1px solid var(--line); border-radius: var(--r-ui); padding: 10px 14px; cursor: pointer; color: var(--text); }
+.prompt:hover { border-color: var(--accent); }
+.pick { display: grid; grid-template-columns: 56px 1fr; gap: 12px; text-decoration: none; padding: 8px; margin: 0 -8px; border-radius: var(--r-ui); }
+.pick:hover { background: var(--raised); }
+.pick .frame { aspect-ratio: 2/3; border-radius: var(--r-poster); overflow: hidden; background: var(--raised); position: relative; }
+.pick .frame img { width: 100%; height: 100%; object-fit: cover; }
+.pick .frame.noimg::after { font-size: 12px; padding: 4px; }
+.pick b { display: block; font-weight: 600; }
+.pick p { font-size: 13px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: 2px; }
+.picks { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+.typing { display: inline-flex; gap: 5px; align-items: center; color: var(--muted); font-size: 14px; }
+.typing i { width: 10px; height: 14px; border: 1.5px solid var(--dim); border-radius: 2px; animation: frame 1s steps(1) infinite; }
+.typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
+@keyframes frame { 50% { background: var(--accent); border-color: var(--accent); } }
+.chat-note { border-left: 2px solid var(--danger); padding: 4px 0 4px 12px; }
+.chat-note .actions { display: flex; gap: 8px; margin-top: 10px; }
+.composer { border-top: 1px solid var(--line); padding: 12px 16px 16px; }
+.composer .box { display: flex; align-items: flex-end; gap: 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 6px 6px 6px 14px; }
+.composer .box:focus-within { border-color: var(--accent); }
+.composer textarea { flex: 1; resize: none; border: 0; background: transparent; outline: none; padding: 8px 0; max-height: 140px; line-height: 1.45; }
+.composer textarea::placeholder { color: var(--dim); }
+.composer .send { width: 40px; height: 40px; border-radius: 8px; border: 0; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; cursor: pointer; }
+.composer .send[disabled] { background: var(--raised); color: var(--dim); cursor: not-allowed; }
+.composer .foot { display: flex; justify-content: space-between; font-size: 12px; color: var(--dim); margin-top: 6px; }
+@media (max-width: 600px) {
+  .chat { top: auto; height: 88dvh; width: 100%; border-left: 0; border-top: 1px solid var(--line); border-radius: 16px 16px 0 0; transform: translateY(100%); }
+  .chat-launch span { display: none; }
+  .chat-launch { padding: 0 14px; }
+}
+
+/* ----- misc ----- */
+.proto-bar {
+  position: fixed; left: 12px; bottom: 12px; z-index: 60; display: flex; gap: 6px; flex-wrap: wrap;
+  background: #000; color: #fff; border-radius: 8px; padding: 6px; font-size: 12px; max-width: calc(100% - 100px);
+}
+.proto-bar a, .proto-bar button { background: #222; color: #fff; border: 0; padding: 5px 9px; border-radius: 5px; text-decoration: none; cursor: pointer; font-size: 12px; }
+.proto-bar button[aria-pressed="true"] { background: var(--accent); color: #000; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+
+.page-head { padding-top: clamp(32px, 5vw, 64px); display: grid; gap: 10px; }
+.filters { position: sticky; top: var(--header-h); z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); margin-top: 28px; }
+.filters .wrap { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; padding-block: 14px; }
+.filters .field { min-width: 150px; flex: 1 1 150px; max-width: 220px; }
+.filters .field label { font-size: 13px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r-ui); overflow: hidden; height: 46px; }
+.seg button { background: none; border: 0; padding: 0 14px; cursor: pointer; color: var(--muted); font-weight: 500; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+.results-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding-block: 24px; }
+.active-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.more { display: grid; justify-items: center; gap: 12px; padding-top: 48px; }
+.skel .frame { background: linear-gradient(100deg, var(--surface) 30%, var(--raised) 50%, var(--surface) 70%) 0 0/300% 100%; animation: sh 1.4s linear infinite; }
+.skel .line { height: 12px; border-radius: 3px; background: var(--surface); margin-top: 12px; width: 80%; }
+@keyframes sh { to { background-position: -150% 0; } }
+.empty { display: none; padding: 64px 0; max-width: 52ch; gap: 16px; }
+body.show-empty .empty { display: grid; } body.show-empty .results, body.show-empty .more { display: none; }
+body.show-loading .results .poster { display: none; } body:not(.show-loading) .results .skel { display: none; }
+.to-top { position: fixed; right: 20px; bottom: 80px; z-index: 20; }
+
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap">
+    <a class="logo" href="home.html" aria-label="Reel Reveal home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="7.5" r="1.6"/><circle cx="12" cy="16.5" r="1.6"/><circle cx="7.5" cy="12" r="1.6"/><circle cx="16.5" cy="12" r="1.6"/></svg><span>Reel Reveal</span></a>
+    <form class="search" role="search" action="movies.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+      <label class="sr-only" for="q">Search movies</label>
+      <input id="q" name="title" type="search" placeholder="Search by title" autocomplete="off">
+    </form>
+    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu" data-menu><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a href="movies.html" aria-current="page">Browse</a>
+      <a href="library.html">Library</a>
+      <a href="auth.html">Sign in</a>
+      <a class="btn btn-primary" href="quiz.html">Take the quiz <span class="count" aria-label="5 AI requests left today">5 left</span></a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+
+<div class="wrap page-head">
+  <h1 class="display-l">Browse</h1>
+  <p class="lede">Most popular right now. Narrow it down by genre, decade or rating.</p>
+</div>
+<div class="filters" role="region" aria-label="Filters">
+  <form class="wrap" onsubmit="return false">
+    <div class="field"><label for="f-genre">Genre</label><select id="f-genre" class="select"><option>Any genre</option><option selected>Science fiction</option><option>Drama</option><option>Thriller</option></select></div>
+    <div class="field"><label for="f-year">Released</label><select id="f-year" class="select"><option>Any year</option><option>2020s</option><option selected>2010s</option><option>2000s</option><option>Before 1980</option></select></div>
+    <div class="field" style="flex:0 0 auto;max-width:none"><span id="rating-l" style="font-size:13px;font-weight:500;color:var(--muted)">Rating</span>
+      <div class="seg" role="group" aria-labelledby="rating-l">
+        <button type="button" aria-pressed="false" data-seg>Any</button><button type="button" aria-pressed="true" data-seg>7+</button><button type="button" aria-pressed="false" data-seg>8+</button>
+      </div>
+    </div>
+    <div class="field" style="flex:0 0 auto"><label for="f-sort">Sort by</label><select id="f-sort" class="select"><option>Popularity</option><option>Rating</option><option>Newest</option></select></div>
+  </form>
+</div>
+<div class="wrap">
+  <div class="results-head">
+    <p class="muted tnum" aria-live="polite">1,284 films. Showing 18.</p>
+    <div class="active-filters">
+      <button class="chip is-on" type="button" aria-label="Remove filter Science fiction">Science fiction <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <button class="chip is-on" type="button" aria-label="Remove filter 2010s">2010s <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <button class="chip" type="button">Clear all</button>
+    </div>
+  </div>
+  <div class="grid-posters results">
+    
+<article class="poster">
+  <a class="stretched" href="movie.html" aria-label="Dune: Part Two (2024)"></a>
+  <div class="frame" data-title="Dune: Part Two"><img src="https://image.tmdb.org/t/p/w342/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg');this.remove()" ></div>
+  <div class="actions">
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Save Dune: Part Two" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg></button>
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Mark Dune: Part Two as watched" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  </div>
+  <div class="meta">
+    <h3 class="title">Dune: Part Two</h3>
+    <span class="rating" aria-label="Rated 8.1 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>8.1</span>
+  </div>
+  <span class="year">2024</span>
+</article>
+<article class="poster">
+  <a class="stretched" href="movie.html" aria-label="Oppenheimer (2023)"></a>
+  <div class="frame" data-title="Oppenheimer"><img src="https://image.tmdb.org/t/p/w342/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg');this.remove()" ></div>
+  <div class="actions">
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Save Oppenheimer" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg></button>
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Mark Oppenheimer as watched" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  </div>
+  <div class="meta">
+    <h3 class="title">Oppenheimer</h3>
+    <span class="rating" aria-label="Rated 8.1 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>8.1</span>
+  </div>
+  <span class="year">2023</span>
+</article>
+<article class="poster">
+  <a class="stretched" href="movie.html" aria-label="Interstellar (2014)"></a>
+  <div class="frame" data-title="Interstellar"><img src="https://image.tmdb.org/t/p/w342/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg');this.remove()" ></div>
+  <div class="actions">
+    <button class="icon-btn" type="button" aria-pressed="true" aria-label="Save Interstellar" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg></button>
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Mark Interstellar as watched" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  </div>
+  <div class="meta">
+    <h3 class="title">Interstellar</h3>
+    <span class="rating" aria-label="Rated 8.4 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>8.4</span>
+  </div>
+  <span class="year">2014</span>
+</article>
+<article class="poster">
+  <a class="stretched" href="movie.html" aria-label="Inception (2010)"></a>
+  <div class="frame" data-title="Inception"><img src="https://image.tmdb.org/t/p/w342/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg');this.remove()" ></div>
+  <div class="actions">
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Save Inception" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg></button>
+    <button class="icon-btn" type="button" aria-pressed="true" aria-label="Mark Inception as watched" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  </div>
+  <div class="meta">
+    <h3 class="title">Inception</h3>
+    <span class="rating" aria-label="Rated 8.4 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>8.4</span>
+  </div>
+  <span class="year">2010</span>
+</article>
+<article class="poster">
+  <a class="stretched" href="movie.html" aria-label="The Dark Knight (2008)"></a>
+  <div class="frame" data-title="The Dark Knight"><img src="https://image.tmdb.org/t/p/w342/qJ2tW6WMUDux911r6m7haRef0WH.jpg" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg');this.remove()" ></div>
+  <div class="actions">
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Save The Dark Knight" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg></button>
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Mark The Dark Knight as watched" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  </div>
+  <div class="meta">
+    <h3 class="title">The Dark Knight</h3>
+    <span class="rating" aria-label="Rated 8.5 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>8.5</span>
+  </div>
+  <span class="year">2008</span>
+</article>
+<article class="poster">
+  <a class="stretched" href="movie.html" aria-label="Parasite (2019)"></a>
+  <div class="frame" data-title="Parasite"><img src="https://image.tmdb.org/t/p/w342/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg');this.remove()" ></div>
+  <div class="actions">
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Save Parasite" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg></button>
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Mark Parasite as watched" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  </div>
+  <div class="meta">
+    <h3 class="title">Parasite</h3>
+    <span class="rating" aria-label="Rated 8.5 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>8.5</span>
+  </div>
+  <span class="year">2019</span>
+</article>
+<article class="poster">
+  <a class="stretched" href="movie.html" aria-label="Pulp Fiction (1994)"></a>
+  <div class="frame" data-title="Pulp Fiction"><img src="https://image.tmdb.org/t/p/w342/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg');this.remove()" ></div>
+  <div class="actions">
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Save Pulp Fiction" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg></button>
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Mark Pulp Fiction as watched" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  </div>
+  <div class="meta">
+    <h3 class="title">Pulp Fiction</h3>
+    <span class="rating" aria-label="Rated 8.5 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>8.5</span>
+  </div>
+  <span class="year">1994</span>
+</article>
+<article class="poster">
+  <a class="stretched" href="movie.html" aria-label="The Godfather (1972)"></a>
+  <div class="frame" data-title="The Godfather"><img src="https://image.tmdb.org/t/p/w342/3bhkrj58Vtu7enYsRolD1fZdja1.jpg" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg');this.remove()" ></div>
+  <div class="actions">
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Save The Godfather" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg></button>
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Mark The Godfather as watched" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  </div>
+  <div class="meta">
+    <h3 class="title">The Godfather</h3>
+    <span class="rating" aria-label="Rated 8.7 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>8.7</span>
+  </div>
+  <span class="year">1972</span>
+</article>
+<article class="poster">
+  <a class="stretched" href="movie.html" aria-label="Spirited Away (2001)"></a>
+  <div class="frame" data-title="Spirited Away"><img src="https://image.tmdb.org/t/p/w342/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg');this.remove()" ></div>
+  <div class="actions">
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Save Spirited Away" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg></button>
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Mark Spirited Away as watched" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  </div>
+  <div class="meta">
+    <h3 class="title">Spirited Away</h3>
+    <span class="rating" aria-label="Rated 8.5 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>8.5</span>
+  </div>
+  <span class="year">2001</span>
+</article>
+<article class="poster">
+  <a class="stretched" href="movie.html" aria-label="Everything Everywhere All at Once (2022)"></a>
+  <div class="frame" data-title="Everything Everywhere All at Once"><img src="https://image.tmdb.org/t/p/w342/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg');this.remove()" ></div>
+  <div class="actions">
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Save Everything Everywhere All at Once" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg></button>
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Mark Everything Everywhere All at Once as watched" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  </div>
+  <div class="meta">
+    <h3 class="title">Everything Everywhere All at Once</h3>
+    <span class="rating" aria-label="Rated 7.8 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>7.8</span>
+  </div>
+  <span class="year">2022</span>
+</article>
+<article class="poster">
+  <a class="stretched" href="movie.html" aria-label="Arrival (2016)"></a>
+  <div class="frame" data-title="Arrival"><img src="https://image.tmdb.org/t/p/w342/x2FJsf1ElAgr63Y3PNPtJrcmpoe.jpg" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg');this.remove()" ></div>
+  <div class="actions">
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Save Arrival" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg></button>
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Mark Arrival as watched" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  </div>
+  <div class="meta">
+    <h3 class="title">Arrival</h3>
+    <span class="rating" aria-label="Rated 7.6 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>7.6</span>
+  </div>
+  <span class="year">2016</span>
+</article>
+<article class="poster">
+  <a class="stretched" href="movie.html" aria-label="Blade Runner 2049 (2017)"></a>
+  <div class="frame" data-title="Blade Runner 2049"><img src="https://image.tmdb.org/t/p/w342/gajva2L0rPYkEWjzgFlBXCAVBE5.jpg" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg');this.remove()" ></div>
+  <div class="actions">
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Save Blade Runner 2049" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg></button>
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Mark Blade Runner 2049 as watched" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  </div>
+  <div class="meta">
+    <h3 class="title">Blade Runner 2049</h3>
+    <span class="rating" aria-label="Rated 7.6 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>7.6</span>
+  </div>
+  <span class="year">2017</span>
+</article>
+<article class="poster">
+  <a class="stretched" href="movie.html" aria-label="Fight Club (1999)"></a>
+  <div class="frame" data-title="Fight Club"><img src="https://image.tmdb.org/t/p/w342/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg');this.remove()" ></div>
+  <div class="actions">
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Save Fight Club" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg></button>
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Mark Fight Club as watched" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  </div>
+  <div class="meta">
+    <h3 class="title">Fight Club</h3>
+    <span class="rating" aria-label="Rated 8.4 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>8.4</span>
+  </div>
+  <span class="year">1999</span>
+</article>
+<article class="poster">
+  <a class="stretched" href="movie.html" aria-label="The Shawshank Redemption (1994)"></a>
+  <div class="frame" data-title="The Shawshank Redemption"><img src="https://image.tmdb.org/t/p/w342/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg');this.remove()" ></div>
+  <div class="actions">
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Save The Shawshank Redemption" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg></button>
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Mark The Shawshank Redemption as watched" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  </div>
+  <div class="meta">
+    <h3 class="title">The Shawshank Redemption</h3>
+    <span class="rating" aria-label="Rated 8.7 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>8.7</span>
+  </div>
+  <span class="year">1994</span>
+</article>
+<article class="poster">
+  <a class="stretched" href="movie.html" aria-label="Dunkirk (2017)"></a>
+  <div class="frame" data-title="Dunkirk"><img src="https://image.tmdb.org/t/p/w342/ebSnODDg9lbsMIaWg2uAbjn7TO5.jpg" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg');this.remove()" ></div>
+  <div class="actions">
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Save Dunkirk" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg></button>
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Mark Dunkirk as watched" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  </div>
+  <div class="meta">
+    <h3 class="title">Dunkirk</h3>
+    <span class="rating" aria-label="Rated 7.5 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>7.5</span>
+  </div>
+  <span class="year">2017</span>
+</article>
+<article class="poster">
+  <a class="stretched" href="movie.html" aria-label="Groundhog Day (1993)"></a>
+  <div class="frame" data-title="Groundhog Day"><img src="https://image.tmdb.org/t/p/w342/gCgt1WARPZaXnq523ySQEUKinCs.jpg" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg');this.remove()" ></div>
+  <div class="actions">
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Save Groundhog Day" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg></button>
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Mark Groundhog Day as watched" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  </div>
+  <div class="meta">
+    <h3 class="title">Groundhog Day</h3>
+    <span class="rating" aria-label="Rated 7.6 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>7.6</span>
+  </div>
+  <span class="year">1993</span>
+</article>
+<article class="poster">
+  <a class="stretched" href="movie.html" aria-label="Edge of Tomorrow (2014)"></a>
+  <div class="frame" data-title="Edge of Tomorrow"><img src="https://image.tmdb.org/t/p/w342/nBM9MMa2WCwvMG4IJ3eiGUdbPe6.jpg" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg');this.remove()" ></div>
+  <div class="actions">
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Save Edge of Tomorrow" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg></button>
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Mark Edge of Tomorrow as watched" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  </div>
+  <div class="meta">
+    <h3 class="title">Edge of Tomorrow</h3>
+    <span class="rating" aria-label="Rated 7.6 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>7.6</span>
+  </div>
+  <span class="year">2014</span>
+</article>
+<article class="poster">
+  <a class="stretched" href="movie.html" aria-label="Palm Springs (2020)"></a>
+  <div class="frame" data-title="Palm Springs"><img src="https://image.tmdb.org/t/p/w342/yof9y8wyrI1YKYYqEy5oKxMzyD3.jpg" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add('noimg');this.remove()" ></div>
+  <div class="actions">
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Save Palm Springs" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.8C19.5 15.4 12 20 12 20z"/></svg></button>
+    <button class="icon-btn" type="button" aria-pressed="false" aria-label="Mark Palm Springs as watched" data-toggle><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  </div>
+  <div class="meta">
+    <h3 class="title">Palm Springs</h3>
+    <span class="rating" aria-label="Rated 7.2 out of 10"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>7.2</span>
+  </div>
+  <span class="year">2020</span>
+</article>
+    <div class="skel" aria-hidden="true"><div class="frame" style="aspect-ratio:2/3;border-radius:3px"></div><div class="line"></div><div class="line" style="width:30%"></div></div><div class="skel" aria-hidden="true"><div class="frame" style="aspect-ratio:2/3;border-radius:3px"></div><div class="line"></div><div class="line" style="width:30%"></div></div><div class="skel" aria-hidden="true"><div class="frame" style="aspect-ratio:2/3;border-radius:3px"></div><div class="line"></div><div class="line" style="width:30%"></div></div><div class="skel" aria-hidden="true"><div class="frame" style="aspect-ratio:2/3;border-radius:3px"></div><div class="line"></div><div class="line" style="width:30%"></div></div><div class="skel" aria-hidden="true"><div class="frame" style="aspect-ratio:2/3;border-radius:3px"></div><div class="line"></div><div class="line" style="width:30%"></div></div><div class="skel" aria-hidden="true"><div class="frame" style="aspect-ratio:2/3;border-radius:3px"></div><div class="line"></div><div class="line" style="width:30%"></div></div><div class="skel" aria-hidden="true"><div class="frame" style="aspect-ratio:2/3;border-radius:3px"></div><div class="line"></div><div class="line" style="width:30%"></div></div><div class="skel" aria-hidden="true"><div class="frame" style="aspect-ratio:2/3;border-radius:3px"></div><div class="line"></div><div class="line" style="width:30%"></div></div><div class="skel" aria-hidden="true"><div class="frame" style="aspect-ratio:2/3;border-radius:3px"></div><div class="line"></div><div class="line" style="width:30%"></div></div><div class="skel" aria-hidden="true"><div class="frame" style="aspect-ratio:2/3;border-radius:3px"></div><div class="line"></div><div class="line" style="width:30%"></div></div><div class="skel" aria-hidden="true"><div class="frame" style="aspect-ratio:2/3;border-radius:3px"></div><div class="line"></div><div class="line" style="width:30%"></div></div><div class="skel" aria-hidden="true"><div class="frame" style="aspect-ratio:2/3;border-radius:3px"></div><div class="line"></div><div class="line" style="width:30%"></div></div>
+  </div>
+  <div class="empty">
+    <h2 class="display-m">Nothing matches all three filters.</h2>
+    <p class="lede">Try a different decade, or drop the rating filter.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" type="button">Clear filters</button><button class="btn btn-ghost" type="button" data-open-chat>Describe a film instead</button></div>
+  </div>
+  <div class="more">
+    <button class="btn btn-ghost btn-lg" type="button">Show 18 more</button>
+    <span class="dim small">or <a href="quiz.html" class="muted">let the quiz pick for you</a></span>
+  </div>
+</div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="brand">
+      <a class="logo" href="home.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="7.5" r="1.6"/><circle cx="12" cy="16.5" r="1.6"/><circle cx="7.5" cy="12" r="1.6"/><circle cx="16.5" cy="12" r="1.6"/></svg><span>Reel Reveal</span></a>
+      <p class="muted small" style="margin-top:12px;max-width:34ch">Answer eight questions, get eight films worth your evening. Movie data from TMDB.</p>
+    </div>
+    <div>
+      <h2>Find a film</h2>
+      <ul><li><a href="quiz.html">Take the quiz</a></li><li><a href="movies.html">Browse movies</a></li><li><a href="#" data-open-chat>Describe a film</a></li></ul>
+    </div>
+    <div>
+      <h2>Account</h2>
+      <ul><li><a href="library.html">Library</a></li><li><a href="payment.html">Buy AI requests</a></li><li><a href="auth.html">Sign in</a></li></ul>
+    </div>
+    <div class="legal"><span>&copy; 2026 Reel Reveal</span><span><a href="#" class="muted">Privacy policy</a> &nbsp; <a href="#" class="muted">Terms</a></span></div>
+  </div>
+</footer>
+
+<button class="chat-launch" type="button" aria-controls="chat" aria-expanded="false" data-open-chat><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg><span>Describe a film</span></button>
+<section class="chat" id="chat" role="dialog" aria-modal="false" aria-labelledby="chat-title">
+  <div class="chat-head">
+    <h2 id="chat-title">Describe a film</h2>
+    <button class="icon-btn" type="button" aria-label="Close" data-close-chat style="background:transparent"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <div class="quota"><span class="tnum">3 of 5 free requests left today</span><span class="bar" aria-hidden="true"><i style="width:60%"></i></span></div>
+  </div>
+  <div class="chat-log" id="chat-log" aria-live="polite">
+    <div class="chat-empty">
+      <p>Tell me what you remember: a scene, an actor, the mood. I'll find the film.</p>
+      <div class="prompts">
+        <button class="prompt" type="button" data-prompt>A man keeps waking up on the same day</button>
+        <button class="prompt" type="button" data-prompt>Something like Arrival, but less sad</button>
+        <button class="prompt" type="button" data-prompt>A Korean thriller about two families</button>
+      </div>
+    </div>
+  </div>
+  <form class="composer" id="composer">
+    <div class="box">
+      <label class="sr-only" for="chat-input">Describe the film</label>
+      <textarea id="chat-input" rows="1" maxlength="500" placeholder="A heist in a dream inside a dream..."></textarea>
+      <button class="send" type="submit" aria-label="Send" disabled><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button>
+    </div>
+    <div class="foot"><span>Enter to send, Shift+Enter for a new line</span><span class="tnum" id="chat-count"></span></div>
+  </form>
+</section>
+<div class="proto-bar" aria-label="Prototype states"><button type="button" data-state="" aria-pressed="true">Results</button><button type="button" data-state="show-loading" aria-pressed="false">Loading</button><button type="button" data-state="show-empty" aria-pressed="false">Empty</button><a href="index.html">Index</a></div>
+<script>
+
+(function(){
+  var b=document.body;
+  document.addEventListener('click',function(e){
+    var t=e.target.closest('[data-toggle]'); if(t){t.setAttribute('aria-pressed', t.getAttribute('aria-pressed')!=='true'); return;}
+    var m=e.target.closest('[data-menu]'); if(m){var o=b.classList.toggle('menu-open'); m.setAttribute('aria-expanded',o); return;}
+    if(e.target.closest('[data-open-chat]')){e.preventDefault(); openChat(); return;}
+    if(e.target.closest('[data-close-chat]')){closeChat(); return;}
+    var p=e.target.closest('[data-prompt]'); if(p){ask(p.textContent); return;}
+  });
+  var chatEl=document.getElementById('chat'), input=document.getElementById('chat-input'), log=document.getElementById('chat-log'), form=document.getElementById('composer');
+  var send=form.querySelector('.send'), count=document.getElementById('chat-count'), launch=document.querySelector('.chat-launch');
+  function openChat(){b.classList.add('chat-open'); launch.setAttribute('aria-expanded','true'); setTimeout(function(){input.focus()},50);}
+  function closeChat(){b.classList.remove('chat-open'); launch.setAttribute('aria-expanded','false'); launch.focus();}
+  window.__openChat=openChat;
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&b.classList.contains('chat-open')) closeChat(); });
+  input.addEventListener('input',function(){
+    send.disabled=!input.value.trim();
+    input.style.height='auto'; input.style.height=input.scrollHeight+'px';
+    var n=input.value.length; count.textContent = n>400 ? (500-n)+' characters left' : '';
+  });
+  input.addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault(); if(input.value.trim()) ask(input.value);} });
+  form.addEventListener('submit',function(e){e.preventDefault(); if(input.value.trim()) ask(input.value);});
+  function add(html,cls){var d=document.createElement('div'); d.className=cls; d.innerHTML=html; log.appendChild(d); log.scrollTop=log.scrollHeight; return d;}
+  var PICKS=[{"t":"Groundhog Day","y":1993,"p":"/gCgt1WARPZaXnq523ySQEUKinCs.jpg"},{"t":"Palm Springs","y":2020,"p":"/yof9y8wyrI1YKYYqEy5oKxMzyD3.jpg"},{"t":"Edge of Tomorrow","y":2014,"p":"/nBM9MMa2WCwvMG4IJ3eiGUdbPe6.jpg"}];
+  var NOTES=["Bill Murray relives February 2nd in a small Pennsylvania town.","Two wedding guests stuck in the same day in the desert.","A soldier resets to the morning each time he dies in battle."];
+  function ask(text){
+    var empty=log.querySelector('.chat-empty'); if(empty) empty.remove();
+    var u=add('', 'msg-user'); u.textContent=text.trim();
+    input.value=''; input.style.height='auto'; send.disabled=true; count.textContent='';
+    var t=add('<span class="typing"><i></i><i></i><i></i> Looking through the archive</span>','msg-ai');
+    setTimeout(function(){
+      t.remove();
+      var picks=PICKS.map(function(m,i){return '<a class="pick" href="movie.html"><span class="frame" data-title="'+m.t+'"><img src="https://image.tmdb.org/t/p/w154'+m.p+'" alt="" onerror="this.parentElement.classList.add(\'noimg\');this.remove()"></span><span><b>'+m.t+' <span class="dim tnum" style="font-weight:400">'+m.y+'</span></b><p>'+NOTES[i]+'</p></span></a>';}).join('');
+      add('<p>That sounds like <b>Groundhog Day</b>. Two more time-loop films, in case it was one of these:</p><div class="picks">'+picks+'</div>','msg-ai');
+    }, 1100);
+  }
+})();
+
+document.querySelectorAll('[data-seg]').forEach(function(b){b.addEventListener('click',function(){b.parentElement.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b)})})});
+document.querySelectorAll('[data-state]').forEach(function(b){b.addEventListener('click',function(){document.body.classList.remove('show-loading','show-empty'); if(b.dataset.state) document.body.classList.add(b.dataset.state); document.querySelectorAll('[data-state]').forEach(function(x){x.setAttribute('aria-pressed',x===b)})})});
+</script>
+</body>
+</html>

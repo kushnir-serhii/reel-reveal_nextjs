@@ -19,6 +19,12 @@ const nextConfig = {
     },
   },
   images: {
+    loader: "custom",
+    loaderFile: "./src/utils/imageLoader.ts",
+    // srcset candidates that match TMDB's pre-sized images, so the browser
+    // isn't pushed to a much larger file than it needs.
+    imageSizes: [92, 154, 185, 300],
+    deviceSizes: [342, 500, 780, 1280, 1920],
     remotePatterns: [
       {
         protocol: "https",

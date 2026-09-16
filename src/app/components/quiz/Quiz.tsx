@@ -7,13 +7,22 @@ import { Loader } from "../ui/Loader";
 import { QuizListMovies } from "./QuizListMovies";
 import { QuizQuestions } from "./QuizQuestions";
 import { fetchQuizMovies } from "../../actions/fetchQuizMovies";
-import { ISessionUser } from "@/typification";
+import { AiLimitError, ISessionUser } from "@/typification";
 import { qiuzMoviesSignal } from "@/context/MoviesContext";
 import { ButtonOrLink } from "../ui/ButtonOrLink";
 import { useContextCountQuiz } from "@/context/CountQuizContext";
 import { Modal } from "../ui/Modal";
 import { Popup } from "./Popup";
 import { animationSection } from "@/variables/animation";
+import { AI_LIMIT_CODES } from "@/variables";
+
+const LIMIT_CODES: string[] = [
+  AI_LIMIT_CODES.loginRequired,
+  AI_LIMIT_CODES.noCredits,
+];
+
+const isLimitError = (error: AiLimitError) =>
+  !!error?.code && LIMIT_CODES.includes(error.code);
 
 interface IQuizProps {
   sessionUser: ISessionUser;
@@ -29,7 +38,7 @@ export const Quiz: React.FC<IQuizProps> = ({ sessionUser, isSHowWithAnimation=tr
   );
 
   // Use context count pased quiz
-  const { decrement, reset, count } = useContextCountQuiz();
+  const { refresh, count, quota } = useContextCountQuiz();
 
   // Use SWR to fetch quiz movies based on quizResult
   const {
@@ -46,16 +55,21 @@ export const Quiz: React.FC<IQuizProps> = ({ sessionUser, isSHowWithAnimation=tr
         if (!movies || !movies.length) throw new Error();
         qiuzMoviesSignal.value = movies ?? [];
         setIsQuizActive(false);
-        decrement();
+        refresh();
       },
-      onError: (error: any) => {
+      onError: (error: AiLimitError) => {
         console.error(error);
+        refresh();
+        if (isLimitError(error)) {
+          setQuizResult([]);
+          setShowModal(true);
+        }
       },
     }
   );
 
   const handleNextQuizClick = () => {
-    if (count > 0) {
+    if (count !== 0) {
       setQuizResult([]);
       setIsQuizActive(true);
     } else {
@@ -76,7 +90,7 @@ export const Quiz: React.FC<IQuizProps> = ({ sessionUser, isSHowWithAnimation=tr
     }
   }, [showModal]);
 
-  if (error) {
+  if (error && !isLimitError(error)) {
     return (
       <div className="flex items-center justify-center flex-col gap-12">
         <h2 className={`pr-2.5 pl-2.5`}>Somthing went wrong</h2>
@@ -95,7 +109,11 @@ export const Quiz: React.FC<IQuizProps> = ({ sessionUser, isSHowWithAnimation=tr
         {isValidating ? (
           <Loader />
         ) : isQuizActive ? (
-          <QuizQuestions quizData={setQuizResult} isLeftQuiz={count === 0} />
+          <QuizQuestions
+            key={quizResult.length ? "answered" : "new"}
+            quizData={setQuizResult}
+            isLeftQuiz={count === 0}
+          />
         ) : (
           <QuizListMovies
             clearPrevQuiz={handleNextQuizClick}
@@ -111,7 +129,10 @@ export const Quiz: React.FC<IQuizProps> = ({ sessionUser, isSHowWithAnimation=tr
           <div
             className={`absolute w-full h-full transition-all duration-1000 ease-in-out z-40 ${showPopUp ? "left-1/2 -translate-x-1/2" : "-left-[1280px]"}`}
           >
-            <Popup />
+            <Popup
+              isGuest={quota?.isGuest ?? !sessionUser.userId}
+              onClose={() => setShowModal(false)}
+            />
           </div>
         </div>
       </Modal>

@@ -38,7 +38,7 @@ export const ConsentCoockie: React.FC = () => {
       <div className="mb-4 md:mb-0">
         This website uses cookies to enhance the user experience.{" "}
         <Link href="/privacy-policy" target="_blank" className="link">
-          Learn more
+          Learn more about cookies
         </Link>
       </div>
       <div className="flex gap-4">

@@ -5,8 +5,8 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import { Urbanist } from "next/font/google";
 import { ToastContainer } from "react-toastify";
-import "./globals.css";
 import "react-toastify/dist/ReactToastify.css";
+import "./globals.css";
 import { ConsentCoockie } from "./components/consentCoockie/ConsentCookie";
 
 const urbanist = Urbanist({
@@ -33,10 +33,9 @@ export const metadata: Metadata = {
       url: "https://www.reel-reveal.club",
     },
   ],
+  // No site-wide canonical: it would be inherited by every page and tell
+  // search engines they are all duplicates of the home page.
   metadataBase: new URL("https://www.reel-reveal.club"),
-  alternates: {
-    canonical: "https://www.reel-reveal.club",
-  },
   openGraph: {
     title: "Reel-Reveal | AI Movie Quiz for Personalized Recommendations",
     description:
@@ -72,7 +71,6 @@ export default async function RootLayout({
     <html lang="en">
       <head>
         <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg"></link>
-        <title>Reel-Reveal</title>
       </head>
 
       <body className={`${urbanist.className} ${urbanist.variable}`}>
@@ -83,7 +81,14 @@ export default async function RootLayout({
             <div id="modal" />
           </CountQuizProviderDynamic>
         </SessionProvider>
-        <ToastContainer />
+        <ToastContainer
+          position="top-right"
+          theme="dark"
+          autoClose={4000}
+          newestOnTop
+          pauseOnFocusLoss={false}
+          closeOnClick
+        />
         <SpeedInsights />
         <ConsentCoockie />
       </body>

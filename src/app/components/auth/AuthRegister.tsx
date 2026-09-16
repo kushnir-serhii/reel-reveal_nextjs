@@ -5,8 +5,8 @@ import { userEmailSignal } from "@/context/UserContext";
 import { toast } from "react-toastify";
 import { validateEmail, validatePassword } from "@/utils";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
 import { registerUser } from "@/app/actions/registerUser";
+import { doCredentialLogin } from "@/app/actions/socialLogin";
 import { SharedInput } from "../ui/SharedInput";
 import { ButtonOrLink } from "../ui/ButtonOrLink";
 import { useState } from "react";
@@ -20,13 +20,15 @@ export interface IUserData {
 
 interface AuthRegisterProps {
   setIsLoading: (isLoading: boolean) => void;
+  redirectTo: string;
 }
 
-export const AuthRegister: React.FC<AuthRegisterProps> = ({ setIsLoading }) => {
+export const AuthRegister: React.FC<AuthRegisterProps> = ({
+  setIsLoading,
+  redirectTo,
+}) => {
 const [isSubmited, setIsSubmited] = useState(false);
 
-  // useRouter =============================================
-  const router = useRouter();
   // useForm ===============================================
   const {
     register,
@@ -48,10 +50,13 @@ const [isSubmited, setIsSubmited] = useState(false);
       });
 
       if (response.user) {
-        router.replace("/home");
-        return toast.success(
+        toast.success(
           `User ${response.user.name} registered successfully` //Need to check email send latter!!!!==========
         );
+        // Sign the new user in, then send them back where they came from.
+        const loggedIn = await doCredentialLogin({ email, password });
+        window.location.replace(loggedIn ? redirectTo : "/auth");
+        return;
       }
     } catch (error) {
       console.log(error);

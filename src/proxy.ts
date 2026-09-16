@@ -23,19 +23,20 @@ export default async function proxy(req: NextRequest) {
     return new NextResponse(null, { status: 403 });
   }
 
-  // 2. Existing auth protection logic
-  const session = await auth();
-  const isAuthenticated = !!session?.user;
+  // 2. Auth protection - only decode the session for protected paths, so
+  // public pages don't pay for it on every request.
   const pathname = req.nextUrl.pathname;
-  const protectedPaths = ["/profile", "/saved"];
+  const protectedPaths = ["/profile", "/saved", "/payment"];
+  if (!protectedPaths.some((path) => pathname.startsWith(path))) {
+    return NextResponse.next();
+  }
 
-  if (
-    !isAuthenticated &&
-    protectedPaths.some((path) => pathname.startsWith(path))
-  ) {
+  const session = await auth();
+  if (!session?.user) {
     const url = req.nextUrl.clone();
     url.pathname = "/auth";
-    url.searchParams.set("from", pathname);
+    url.search = "";
+    url.searchParams.set("from", pathname + req.nextUrl.search);
     return NextResponse.redirect(url);
   }
 

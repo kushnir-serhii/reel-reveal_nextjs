@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { stripe } from "@/utils/stripe";
+import { creditPayment } from "@/utils/creditPayment";
 
 export async function POST(req: NextRequest) {
   
@@ -39,7 +40,7 @@ const permittedEvents = ["payment_intent.succeeded"];
      switch (event.type) {
        case "payment_intent.succeeded":
          data = event.data.object;
-         console.log(`Payment status: ${data.status}`);
+         await creditPayment(data);
          break;
        default:
          throw new Error(`Unhandled event: ${event.type}`);

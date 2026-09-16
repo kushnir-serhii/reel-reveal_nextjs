@@ -4,7 +4,7 @@ import { IMovie } from "@/typification";
 // route can answer with a 404 page / the error boundary instead of blank markup.
 export const getMovieById = async (id: number): Promise<IMovie | null> => {
   const response = await fetch(`https://api.themoviedb.org/3/movie/${id}`, {
-    next: { revalidate: 3600 },
+    next: { revalidate: 86400 },
     headers: {
       Authorization: `Bearer ${process.env.BEARER_TOKEN_TMDB}`,
     },

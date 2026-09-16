@@ -1,3 +1,5 @@
+import { YouTubeFacade } from "./YouTubeFacade";
+
 // Presentational only, so it renders in both the server and the client tree.
 interface MovieInfoTrailerFrameProps {
   trailerKey: string | null;
@@ -9,13 +11,7 @@ export const MovieInfoTrailerFrame: React.FC<MovieInfoTrailerFrameProps> = ({
   <div className="flex items-center justify-center w-[100vw] md:w-full max-w-[1200px] overflow-hidden">
     {trailerKey ? (
       <div className="flex items-center justify-center overflow-hidden max-w-screen w-full h-auto border-0 rounded-2xl">
-        <iframe
-          src={`https://www.youtube.com/embed/${trailerKey}`}
-          allowFullScreen
-          title="Movie trailer"
-          loading="lazy"
-          className="w-full aspect-video max-w-screen"
-        />
+        <YouTubeFacade videoId={trailerKey} title="Movie trailer" />
       </div>
     ) : (
       <div className="flex items-center justify-center w-full aspect-video rounded-2xl bg-[#20263D]">
