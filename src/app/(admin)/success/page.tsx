@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { stripe } from "@/utils/stripe";
+import { creditPayment } from "@/utils/creditPayment";
 import { SuccessPayment } from "@/app/components/successPayment/SuccessPayment";
 
 export default async function SuccessPage({
@@ -13,6 +14,12 @@ export default async function SuccessPage({
 
   const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
   if (!paymentIntent) redirect("/");
+
+  // Credit here too, so the user sees the credits even if the webhook is
+  // late or not configured. creditPayment ignores repeats.
+  await creditPayment(paymentIntent).catch((error) =>
+    console.error("Failed to credit payment:", error?.message)
+  );
 
   const paymentIntentData = {
     id: paymentIntent.id,

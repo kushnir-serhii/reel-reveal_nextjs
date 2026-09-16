@@ -1,14 +1,13 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { useSession } from "next-auth/react";
 import { HeaderNavMenuMobile } from "./HeaderNavMenuMobile";
 import { HeaderNavMenu } from "./HeaderNavMenu";
 
-interface HeaderNavProps {
-  isAuth: boolean;
-}
-
-export const HeaderNav: React.FC<HeaderNavProps> = ({ isAuth }) => {
+// Auth state comes from the client session so the layout stays static.
+export const HeaderNav: React.FC = () => {
+  const isAuth = useSession().status === "authenticated";
   const [isOpenMenu, setIsOpenMenu] = useState(false);
   const scrollPositionRef = useRef(0);
 

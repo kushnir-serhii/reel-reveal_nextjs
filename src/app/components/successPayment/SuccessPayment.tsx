@@ -131,7 +131,11 @@ export const SuccessPayment: React.FC<ISuccessPaymentProps> = ({
       <div className="flex flex-col items-center gap-4" >
         
       <h2 className="text-bgColor">{statusInfo.text}</h2>
-      <h4 className="text-bgColor">Your order has been placed</h4>
+      <h4 className="text-bgColor">
+        {paymentIntent.status === "succeeded"
+          ? "Your AI requests have been added to your account"
+          : "Your order has been placed"}
+      </h4>
       </div>
       <div className="flex flex-col md:flex-row justify-center gap-2 w-full">
         <Link

@@ -7,7 +7,7 @@ export interface SimilarMoviesProps {
   title: string;
   year: string;
   movieId: number;
-  sessionUser: ISessionUser;
+  sessionUser?: ISessionUser;
 }
 
 // Server component: the AI suggestions and their TMDB lookups run once per

@@ -22,9 +22,9 @@ const router = useRouter();
     router.push(`/movies?title=${preparedTitle}`);
  };
 
-  const isDev = process.env.NODE_ENV === "development";
-  const regExp = isDev ? "\\" : "/";
-  const pathName = getFilNameFromPath(movie, regExp) || "";
+  // The path comes from the server's filesystem, so accept both separators
+  // (Windows "\" and POSIX "/") regardless of NODE_ENV.
+  const pathName = getFilNameFromPath(movie.replaceAll("\\", "/"), "/") || "";
 
   const title = pathName.replaceAll("-", " ");
 

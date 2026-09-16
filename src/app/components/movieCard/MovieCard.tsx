@@ -3,10 +3,12 @@
 import { useState } from "react";
 import Image from "next/image";
 import { toast } from "react-toastify";
+import { useSession } from "next-auth/react";
 import { Modal } from "../ui/Modal";
 import { MovieInfoTrailer } from "../movieInfo/MovieInfoTrailer";
 import { MovieCardHover } from "./MovieCardHover";
 import { MovieCardSkeleton } from "./MovieCardSkeleton";
+import { useHoverPosters } from "./useHoverPosters";
 import { IMovie } from "@/typification";
 import { useOpenUrl, useResize } from "@/hooks";
 import { useMoviesContext } from "@/context/ServiceMoviesContext";
@@ -19,13 +21,17 @@ export interface IMovieInDB {
 
 interface MovieCardProps {
   movie: IMovie;
-  sessionUserStatus: string;
+  // Optional: statically rendered pages don't know the user, so fall back to
+  // the client session.
+  sessionUserStatus?: string;
 }
 
 export const MovieCard: React.FC<MovieCardProps> = ({
   movie,
-  sessionUserStatus,
+  sessionUserStatus: statusFromServer,
 }) => {
+  const { status } = useSession();
+  const sessionUserStatus = statusFromServer ?? status;
   const [isShowHover, setIsShowHover] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -41,6 +47,12 @@ export const MovieCard: React.FC<MovieCardProps> = ({
   const toggleModal = () => setIsModalOpen(!isModalOpen);
 
   const { poster_path, release_date, vote_average, id, title } = movie;
+
+  const { posters, activeIndex } = useHoverPosters(
+    id,
+    poster_path,
+    isShowHover
+  );
 
   const movieForHover = {
     voteAverage: vote_average,
@@ -92,7 +104,7 @@ const handleMouseEvent = (e: React.MouseEvent<HTMLDivElement>) => {
     }
   };
 
-  const poster = `https://image.tmdb.org/t/p/w400/${poster_path}`;
+  const poster = `https://image.tmdb.org/t/p/w400${poster_path}`;
 
   return (
     <div
@@ -106,6 +118,21 @@ const handleMouseEvent = (e: React.MouseEvent<HTMLDivElement>) => {
     >
       {/* Hover Movie Card */}
       <div className=" relative w-full">
+        {/* Extra posters crossfade over the main one while hovered. Rendered
+            before the hover overlay so the overlay stays on top. */}
+        {posters.slice(1).map((path, i) => (
+          <Image
+            key={path}
+            src={`https://image.tmdb.org/t/p/w400${path}`}
+            alt=""
+            aria-hidden
+            fill
+            sizes="(min-width: 1024px) 285px, (min-width: 769px) 50vw, 80vw"
+            className={`object-cover rounded-[18px] transition-opacity duration-700 ease-in-out ${
+              activeIndex === i + 1 ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        ))}
         <MovieCardHover movie={movieForHover} handleMovie={handleMovie} />
         {poster_path ? (
           <Image
@@ -114,7 +141,8 @@ const handleMouseEvent = (e: React.MouseEvent<HTMLDivElement>) => {
             alt={title}
             width={285}
             height={428}
-            quality={75}
+            // Matches the slider: 4 per row on desktop, 2 on tablet, ~1 on mobile.
+            sizes="(min-width: 1024px) 285px, (min-width: 769px) 50vw, 80vw"
             loading="lazy"
             decoding="async"
             className={`w-full h-full rounded-[18px]`}

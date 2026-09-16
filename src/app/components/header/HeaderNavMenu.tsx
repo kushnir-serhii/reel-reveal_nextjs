@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import { ShowQuizCount } from "@/app/components/showQuizCount/ShowQuizCount";
 import { Tooltip } from "@/app/components/ui/Tooltip";
 import { usePathname } from "next/navigation";
+import { authHref } from "@/utils/safeRedirect";
 
 interface HeaderNavMenuProps {
   isAuth: boolean;
@@ -39,7 +40,7 @@ export const HeaderNavMenu: React.FC<HeaderNavMenuProps> = ({ isAuth }) => {
           Favorites
         </p>
       </Link>
-      <Link href={isAuth ? "/profile" : "/auth"} className="link">
+      <Link href={isAuth ? "/profile" : authHref(pathname)} className="link">
         {isAuth ? (
           <p
             className={`${pathname === "/profile" || pathname === "/auth" ? "text-accentColor" : ""}`}
@@ -51,7 +52,7 @@ export const HeaderNavMenu: React.FC<HeaderNavMenuProps> = ({ isAuth }) => {
         )}
       </Link>
       <Tooltip
-        content="Limit of 4 free quizzes reached! Upgrade to Pro for unlimited access."
+        content="Your free AI requests for today are used up. Buy credits to keep going."
         position="bottom"
       >
         <Link
@@ -61,7 +62,7 @@ export const HeaderNavMenu: React.FC<HeaderNavMenuProps> = ({ isAuth }) => {
             hover:bg-accentColor hover:shadow-hoverShadow active:bg-clickedColor`}
         >
           <span className="font-semibold text-base">
-            {count == 0 ? "get pro" : "take quiz"}
+            {count === 0 ? "get credits" : "take quiz"}
           </span>
           <ShowQuizCount />
         </Link>

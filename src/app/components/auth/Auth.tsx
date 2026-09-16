@@ -8,7 +8,11 @@ import { AuthLoginPassword } from "./AuthLoginPassword";
 import { AuthLogin } from "./AuthLogin";
 import Link from "next/link";
 
-export const Auth: React.FC = () => {
+interface AuthProps {
+  redirectTo: string;
+}
+
+export const Auth: React.FC<AuthProps> = ({ redirectTo }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [statusUser, setStatusUser] = useState<
     "signin" | "register" | "signup"
@@ -34,11 +38,15 @@ export const Auth: React.FC = () => {
           <AuthLogin
             setIsLoading={setIsLoading}
             setStatusUser={setStatusUser}
+            redirectTo={redirectTo}
           />
         ) : statusUser === "register" ? (
-          <AuthRegister setIsLoading={setIsLoading} />
+          <AuthRegister setIsLoading={setIsLoading} redirectTo={redirectTo} />
         ) : (
-          <AuthLoginPassword setIsLoading={setIsLoading} />
+          <AuthLoginPassword
+            setIsLoading={setIsLoading}
+            redirectTo={redirectTo}
+          />
         )}
       </div>
       <div className="flex flex-col items-center gap-6">

@@ -1,76 +1,55 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { format, isSameDay } from "date-fns";
-import { countDefaultQuizes } from "@/variables";
+import { createContext, useCallback, useContext } from "react";
+import useSWR from "swr";
+import { useSession } from "next-auth/react";
+import { AiQuota } from "@/typification";
 
-// Create the context
-const CountQuizContext = createContext({
-  count: countDefaultQuizes,
-  decrement: () => {},
-  reset: () => {},
+interface CountQuizContextValue {
+  // Remaining AI requests (free today + paid credits); null while loading.
+  count: number | null;
+  quota: AiQuota | null;
+  refresh: () => void;
+}
+
+const CountQuizContext = createContext<CountQuizContextValue>({
+  count: null,
+  quota: null,
+  refresh: () => {},
 });
 
-// Create the provider component
+const fetchQuota = async (url: string): Promise<AiQuota> => {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to load AI quota");
+  return res.json();
+};
+
+// The AI quota lives on the server (shared by the quiz and the chat), so it
+// can't be reset by clearing browser storage.
 export const CountQuizProvider = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
-  const [count, setCount] = useState(countDefaultQuizes);
-  const [isToDay, setIsToDay] = useState(false);
-  const dateToday = format(new Date(), "yyyy-MM-dd");
+  const { status } = useSession();
 
-  // Load data from localStorage
-  useEffect(() => {
-    if (isToDay) return;
+  const { data, mutate } = useSWR(
+    status === "loading" ? null : ["/api/ai-quota", status],
+    ([url]) => fetchQuota(url),
+    { revalidateOnFocus: true }
+  );
 
-    const storedData = localStorage.getItem("quizCount");
-    if (storedData) {
-      try {
-        const dataQuiz = JSON.parse(storedData);
-        if (isSameDay(new Date(dataQuiz.date), new Date(dateToday))) {
-          setCount(dataQuiz.count);
-          setIsToDay(true);
-          return;
-        }
-      } catch (error) {
-        console.error("Error parsing localStorage data:", error);
-      }
-    }
-
-    // If no valid data, set default values
-    localStorage.setItem(
-      "quizCount",
-      JSON.stringify({ date: dateToday, count: countDefaultQuizes })
-    );
-    setIsToDay(true);
-  }, [dateToday, isToDay]);
-
-  // Update localStorage when count changes
-  useEffect(() => {
-    if (!isToDay || count < 0) return;
-
-    localStorage.setItem(
-      "quizCount",
-      JSON.stringify({ date: dateToday, count })
-    );
-  }, [count, dateToday, isToDay]);
-
-  // Decrement function
-  const decrement = () => setCount((prevCount) => prevCount - 1);
-
-  // Reset function
-  const reset = () => setCount(0);
+  const refresh = useCallback(() => {
+    mutate();
+  }, [mutate]);
 
   return (
-    <CountQuizContext.Provider value={{ count, decrement, reset }}>
+    <CountQuizContext.Provider
+      value={{ count: data?.remaining ?? null, quota: data ?? null, refresh }}
+    >
       {children}
     </CountQuizContext.Provider>
   );
 };
 
-// Custom hook to use the context
-export const useContextCountQuiz = () => {
-  return useContext(CountQuizContext);
-};
+export const useContextCountQuiz = () => useContext(CountQuizContext);

@@ -16,9 +16,13 @@ import { useCookies } from "react-cookie";
 
 interface SignInProps {
   setIsLoading: (isLoading: boolean) => void;
+  redirectTo: string;
 }
 
-export const AuthLoginPassword: React.FC<SignInProps> = ({ setIsLoading }) => {
+export const AuthLoginPassword: React.FC<SignInProps> = ({
+  setIsLoading,
+  redirectTo,
+}) => {
   const [isUserLogedIn, setIsUserLogedIn] = useState(false);
 const [isSubmited, setIsSubmited] = useState(false);
   
@@ -62,10 +66,9 @@ const [isSubmited, setIsSubmited] = useState(false);
   
   useEffect(() => {
     if (!isUserLogedIn) return
-    window.location.reload();
-    window.location.href = "/home";
-   
-  },[isUserLogedIn])
+    // Full navigation so the server-rendered parts pick up the new session.
+    window.location.replace(redirectTo);
+  }, [isUserLogedIn, redirectTo]);
 
   return (
     <>

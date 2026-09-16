@@ -9,3 +9,4 @@ export { getMovieCast } from "./getMovieCast";
 export { getMovieTrailerKey } from "./getMovieTrailerKey";
 export { getSimilarMoviesByAI } from "./getSimilarMoviesByAI";
 
+export { getActorById } from "./getActorById";

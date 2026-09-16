@@ -124,7 +124,11 @@ a {
 }
 
 .custom-outline:focus {
-  @apply outline-[2px] text-accentColor;
+  @apply outline-none;
+}
+
+.custom-outline:focus-visible {
+  @apply outline-[2px] outline-accentColor text-accentColor;
 }
 
 .custom-outline:active {
@@ -165,6 +169,93 @@ a {
 
 .slick-slide {
   width: 100% !important;
+}
+
+/* react-slick wraps each slide in a tabindex="-1" div; clicking focuses it
+   and the browser draws its default (white) focus ring. */
+.slick-slide,
+.slick-slide > div,
+.slick-slide [tabindex="-1"] {
+  outline: none;
+}
+
+/* Toasts (react-toastify) — matched to the app's dark/teal design */
+:root {
+  --toastify-font-family: var(--font-urbanist), sans-serif;
+  --toastify-color-dark: rgba(32, 38, 61, 0.92);
+  --toastify-text-color-dark: #ffffff;
+  --toastify-color-success: #20e8da;
+  --toastify-color-info: #20e8da;
+  --toastify-color-warning: #f5c451;
+  --toastify-color-error: #ff5470;
+  --toastify-icon-color-success: var(--toastify-color-success);
+  --toastify-icon-color-info: var(--toastify-color-info);
+  --toastify-icon-color-warning: var(--toastify-color-warning);
+  --toastify-icon-color-error: var(--toastify-color-error);
+  --toastify-color-progress-dark: #20e8da;
+  --toastify-toast-bd-radius: 16px;
+  --toastify-toast-min-height: 56px;
+  --toastify-toast-width: 360px;
+  /* keep toasts below the fixed header */
+  --toastify-toast-top: 72px;
+}
+
+@media screen and (min-width: 768px) {
+  :root {
+    --toastify-toast-top: 84px;
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  :root {
+    --toastify-toast-top: 100px;
+  }
+}
+
+.Toastify__toast {
+  @apply border border-white/10 backdrop-blur-md font-urbanist text-base font-normal tracking-wide;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.Toastify__toast--success,
+.Toastify__toast--info {
+  @apply border-accentColor/40;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 1px 2px 24px 0 rgba(32, 232, 218, 0.2);
+}
+
+.Toastify__toast--error {
+  border-color: rgba(255, 84, 112, 0.4);
+}
+
+.Toastify__toast--warning {
+  border-color: rgba(245, 196, 81, 0.4);
+}
+
+/* clip the progress bar to the toast's rounded corners (the 5px wrapper
+   can't follow a 16px radius on its own) */
+.Toastify__toast {
+  overflow: hidden;
+}
+
+.Toastify__progress-bar--wrp {
+  border-radius: 0;
+}
+
+.Toastify__close-button {
+  @apply text-white opacity-50 transition-opacity duration-300 hover:opacity-100;
+}
+
+.Toastify__progress-bar--success,
+.Toastify__progress-bar--info {
+  @apply bg-accentColor;
+}
+
+.Toastify__progress-bar--error {
+  background: var(--toastify-color-error);
+}
+
+.Toastify__progress-bar--warning {
+  background: var(--toastify-color-warning);
 }
 
 /*# sourceMappingURL=globals.css.map */

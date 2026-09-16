@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { nanoid } from "nanoid";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { Settings, default as Slider } from "react-slick";
@@ -67,8 +66,10 @@ export const MySlider = <T,>({
   
   return (
     <Slider key={key} ref={sliderRef} {...settings}>
-      {arraySlides.map((item) => (
-         <SlideComponent key={nanoid()} movie={item } />
+      {/* Stable keys: random keys remount every slide and re-download its
+          image on each render. */}
+      {arraySlides.map((item, index) => (
+        <SlideComponent key={index} movie={item} />
       ))}
     </Slider>
   );

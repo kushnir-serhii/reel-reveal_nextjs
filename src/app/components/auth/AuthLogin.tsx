@@ -13,11 +13,13 @@ import { useState } from "react";
 interface AuthLoginProps {
   setStatusUser: (statusUser: "register" | "signup") => void;
   setIsLoading: (isLoading: boolean) => void;
+  redirectTo: string;
 }
 
 export const AuthLogin: React.FC<AuthLoginProps> = ({
   setStatusUser,
   setIsLoading,
+  redirectTo,
 }) => {
 const [isSubmited, setIsSubmited] = useState(false);
 
@@ -83,6 +85,7 @@ const [isSubmited, setIsSubmited] = useState(false);
       <ul className={`flex items-center justify-center gap-5 w-full`}>
         <li className="w-full">
           <form action={socialLogin}>
+            <input type="hidden" name="redirectTo" value={redirectTo} />
             <button
               type="submit"
               name="action"

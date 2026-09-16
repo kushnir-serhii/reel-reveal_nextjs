@@ -1,2 +1,2 @@
 export * from "./userVariables";
-export * from "./quizVariables";
+export * from "./aiVariables";

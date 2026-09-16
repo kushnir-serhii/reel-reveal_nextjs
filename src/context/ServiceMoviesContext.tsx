@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useMemo } from "react";
 import { useSWRConfig } from "swr";
+import { useSession } from "next-auth/react";
 import { useMovies } from "@/hooks/useMovies";
 import {
   addMovieToDBAndMutate,
@@ -30,10 +31,10 @@ const ServiceMoviesContext = createContext<MoviesContextType | undefined>(
 );
 
 export const ServiceMoviesProvider: React.FC<{
-  userId: string;
   children: React.ReactNode;
-}> = ({ userId, children }) => {
+}> = ({ children }) => {
   const { mutate } = useSWRConfig();
+  const userId = useSession().data?.user?.id ?? "";
 
   const { data: movies, error, isLoading, isValidating } = useMovies(userId);
 
