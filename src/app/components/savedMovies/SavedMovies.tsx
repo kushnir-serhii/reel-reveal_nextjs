@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Image from "next/image";
 import useSWR from "swr";
+import { useSession } from "next-auth/react";
 import { ButtonOrLink } from "../ui/ButtonOrLink";
 import { ListMovies } from "@/app/components/listMovies/ListMovies";
-import { MovieCardSkeleton } from "@/app/components/movieCard/MovieCardSkeleton";
 import { Loader } from "../ui/Loader";
 import { fetcher } from "../../actions";
 import { useMoviesContext } from "@/context/ServiceMoviesContext";
@@ -18,32 +18,32 @@ interface SavedMoviesProps {
 
 export const SavedMovies: React.FC<SavedMoviesProps> = React.memo(
   ({ sessionUser }) => {
-    const [movies, setMovies] = useState<IMovie[] | null>(null);
-
-    const { likedMovies, isLoading, error } = useMoviesContext();
+    const { status } = useSession();
+    const { likedMovies, isLoading, isValidating } = useMoviesContext();
 
     const lengthLikedMovies = likedMovies.length;
+    const hasLikedMovies = lengthLikedMovies > 0;
 
-    const { data } = useSWR(
-      lengthLikedMovies > 0
+    const { data } = useSWR<{ movies: IMovie[] }>(
+      hasLikedMovies
         ? ["/api/movies/many-by-array_id", lengthLikedMovies]
         : null,
-      () => fetcher(["/api/movies/many-by-array_id", likedMovies])
+      () => fetcher(["/api/movies/many-by-array_id", likedMovies]),
+      { keepPreviousData: true },
     );
 
-    useEffect(() => {
-      // console.log("DATA GET MOVIES", data, "Error ========>", error);
-      if (!data) return;
+    const movies = hasLikedMovies ? (data?.movies ?? []) : [];
 
-      setMovies(data?.movies);
-    }, [data, data?.movies.length, error]);
+    // Until the session, the liked ids and (if any) the movie details have
+    // all resolved, we don't know yet whether the list is empty.
+    const isInitialLoading =
+      status === "loading" || isLoading || (hasLikedMovies && !data);
 
-    if (movies === null) return <MovieCardSkeleton count={4} />;
     return (
       <div
-        className={`flex items-center flex-col justify-center gap-12 w-full mb-20 ${movies?.length ? "z-10" : "z-20"} `}
+        className={`flex items-center flex-col justify-center gap-12 w-full mb-20 ${movies.length ? "z-10" : "z-20"} `}
       >
-        {movies?.length === 0 ? (
+        {isInitialLoading ? null : movies.length === 0 ? (
           <>
             <Image
               src="/images/popcorn.png"
@@ -66,20 +66,20 @@ export const SavedMovies: React.FC<SavedMoviesProps> = React.memo(
         ) : (
           <>
             <h1>
-              Saved <span className="text-accentColor">{movies?.length}</span>{" "}
+              Saved <span className="text-accentColor">{movies.length}</span>{" "}
               movies
             </h1>
-            <ListMovies movies={movies ?? []} sessionUser={sessionUser} />
+            <ListMovies movies={movies} sessionUser={sessionUser} />
           </>
         )}
-        <Modal isOpen={isLoading}>
+        <Modal isOpen={isInitialLoading || isValidating}>
           <div className="flex items-center justify-center w-screen h-screen">
             <Loader />
           </div>
         </Modal>
       </div>
     );
-  }
+  },
 );
 
 SavedMovies.displayName = "SavedMovies";
