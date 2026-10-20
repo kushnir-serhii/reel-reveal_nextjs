@@ -1,30 +1,41 @@
 import { FC } from "react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
+import { loaderQuizVariants } from "./LoaderQuiz.variants";
 
 export const LoaderQuiz: FC = () => {
+  const {
+    base,
+    robot,
+    robotHead,
+    robotBody,
+    projector,
+    light,
+    cards,
+    card,
+    text,
+  } = loaderQuizVariants();
+
   // Placeholder movie cards
   const placeholders = Array.from({ length: 5 }, (_, i) => i);
 
   return (
-    <div className="flex flex-col items-center justify-center h-64 w-full space-y-6">
+    <div className={base()}>
       {/* AI Robot */}
-      <div className="relative flex flex-col items-center">
-        <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center text-white text-xl font-bold animate-pulse">
-          AI
-        </div>
-        <div className="w-2 h-24 bg-gray-400 mt-2 animate-pulse"></div>
+      <div className={robot()}>
+        <div className={robotHead()}>AI</div>
+        <div className={robotBody()}></div>
       </div>
 
       {/* Projector light */}
-      <div className="relative w-64 h-32">
-        <div className="absolute inset-0 bg-yellow-200 opacity-20 rounded-xl transform rotate-[-15deg]"></div>
+      <div className={projector()}>
+        <div className={light()}></div>
 
         {/* Movie card placeholders */}
-        <div className="absolute inset-0 flex justify-around items-center">
+        <div className={cards()}>
           {placeholders.map((_, i) => (
             <motion.div
               key={i}
-              className="w-14 h-20 bg-gray-300 rounded-lg shadow-md"
+              className={card()}
               initial={{ opacity: 0, y: -20, rotate: -5 }}
               animate={{
                 opacity: [0, 1, 0.7, 1],
@@ -43,7 +54,7 @@ export const LoaderQuiz: FC = () => {
 
       {/* Loading text */}
       <motion.div
-        className="text-gray-700 font-medium"
+        className={text()}
         animate={{ opacity: [0.3, 1, 0.3] }}
         transition={{ duration: 1, repeat: Infinity }}
       >
@@ -52,4 +63,3 @@ export const LoaderQuiz: FC = () => {
     </div>
   );
 };
-

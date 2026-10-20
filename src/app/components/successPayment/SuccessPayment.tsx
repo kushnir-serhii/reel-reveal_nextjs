@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ButtonOrLink } from "../ui";
+import { Link as ButtonLink } from "../ui";
 
 export const SuccessIcon = (
   <svg
@@ -167,9 +167,9 @@ export const SuccessPayment: React.FC<ISuccessPaymentProps> = ({
               <span className="text-accentColor">{paymentIntentId}</span>
             </p>
           </div>
-          <ButtonOrLink href="/payment" className="bg-black text-white">
+          <ButtonLink href="/payment" className="bg-black text-white">
             Test again
-          </ButtonOrLink>
+          </ButtonLink>
         </>
       )}
     </div>

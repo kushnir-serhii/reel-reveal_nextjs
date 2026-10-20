@@ -8,7 +8,7 @@ import { FooterListSocial } from "./FooterListSocial";
 import { DeviceType } from "@/typification";
 import { Icon } from "../ui/Icon";
 import Link from "next/link";
-import { ButtonOrLink } from "../ui/ButtonOrLink";
+import { Link as ButtonLink } from "../ui";
 
 export const Footer: React.FC = () => {
   const [isClient, setIsClient] = useState(false);
@@ -29,9 +29,9 @@ export const Footer: React.FC = () => {
             <MainLogo />
           </div>
           <div className="md:hidden">
-            <ButtonOrLink href={"/quiz"} className={`take-quiz-btn`}>
+            <ButtonLink href={"/quiz"} className={`take-quiz-btn`}>
               take a quiz
-            </ButtonOrLink>
+            </ButtonLink>
           </div>
 
           <div className={`flex justify-between w-full  `}>

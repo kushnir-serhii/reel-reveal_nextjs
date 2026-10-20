@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { GoTriangleDown } from 'react-icons/go';
-import { FilterArray } from '@/typification';
-import { capitalizeFirstLetter } from '@/utils';
+import React, { useState, useEffect, useRef } from "react";
+import { GoTriangleDown } from "react-icons/go";
+import { FilterArray } from "@/typification";
+import { capitalizeFirstLetter } from "@/utils";
+import { multiSelectVariants } from "./MultiSelect.variants";
 
 interface SearchSelectProps {
   placeholder: string;
@@ -40,9 +41,9 @@ export const MultiSelect: React.FC<SearchSelectProps> = ({
         setIsOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -79,64 +80,44 @@ export const MultiSelect: React.FC<SearchSelectProps> = ({
     setIsOpen(!isOpen);
   };
 
+  const { root, trigger, icon, dropdown, list, item, option, dropdownBottom } =
+    multiSelectVariants({ open: isOpen });
+
   return (
     <div
-      className={`relative z-20 flex flex-col justify-end w-full
-        `}
+      className={root()}
       ref={dropdownWithSearchRef}
-      aria-label='Select'
-      onKeyDown={(e) => (e.key === 'Enter' ? toggleDropdown() : null)}
+      aria-label="Select"
+      onKeyDown={(e) => (e.key === "Enter" ? toggleDropdown() : null)}
     >
-      <div
-        onClick={toggleDropdown}
-        className={`flex items-center gap-[4px] justify-between w-full h-10 sm:py-3 py-2 px-4 sm:px-4 cursor-pointer transition-all ease-in-out duration-300 bg-bgSelect
-          ${isOpen ? 'rounded-t-[20px]' : 'rounded-[20px]'}`}
-      >
+      <div onClick={toggleDropdown} className={trigger()}>
         <div>{placeholder}</div>
 
         <div>
-          <GoTriangleDown
-            className={`w-4 h-4 text-white
-            ${isOpen && 'rotate-180'}
-            `}
-          />
+          <GoTriangleDown className={icon()} />
         </div>
       </div>
 
       {options.length > 0 && (
-        <div
-          className={`w-full absolute -z-10 flex flex-wrap transition-all ease-in-out duration-500 overflow-hidden
-            ${isOpen ? 'max-h-[220px] top-full' : 'max-h-0 top-5'}
-        `}
-        >
-          <ul
-            className={` flex flex-wrap pb-1 h-full transition-all ease-in-out duration-500 
-              bg-bgSelectDropDown scrollbar scrollbar-w-2 scrollbar-thumb-h-
-              scrollbar-track-scrolBarTrackColor hover:scrollbar-thumb-textColor scrollbar-thumb-scrolBarThumbColor overflow-x-hidden overflow-y-scroll
-              max-h-[200px]
-              `}
-          >
-            {options.map((option, index) => (
-              <li key={index} className="w-full ">
+        <div className={dropdown()}>
+          <ul className={list()}>
+            {options.map((opt, index) => (
+              <li key={index} className={item()}>
                 <button
                   type="button"
                   disabled={isDisabled}
-                  className={`flex w-full justify-start px-2 py-2 ${
-                    selectedValues.includes(option)
-                      ? 'text-accentColor'
-                      : 'text-textColor'
-                  }
-                  ${isDisabled ? 'opactity-100 cursor-default' : 'cursor-pointer hover:bg-bgSelectItemHover active:text-accentClicked'}`}
-                  onClick={() => handleSelectChange(option)}
+                  className={option({
+                    selected: selectedValues.includes(opt),
+                    disabled: isDisabled,
+                  })}
+                  onClick={() => handleSelectChange(opt)}
                 >
-                  {typeof option === 'string'
-                    ? capitalizeFirstLetter(option)
-                    : option}
+                  {typeof opt === "string" ? capitalizeFirstLetter(opt) : opt}
                 </button>
               </li>
             ))}
           </ul>
-          <div className=" -top-44 w-full h-5 bg-bgSelectDropDown rounded-b-[20px]" />
+          <div className={dropdownBottom()} />
         </div>
       )}
     </div>

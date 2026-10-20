@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { ButtonOrLink } from "./components/ui/ButtonOrLink";
+import { Link } from "./components/ui";
 
 export default function Page() {
   redirect("/home");
@@ -7,7 +7,7 @@ export default function Page() {
   return (
     <main>
       <h2>Root Page</h2>
-      <ButtonOrLink href={"/home"}> Link to home page...</ButtonOrLink>
+      <Link href={"/home"}> Link to home page...</Link>
     </main>
   );
 }

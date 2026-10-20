@@ -33,7 +33,7 @@ export const HeaderSearchBar: React.FC = () => {
           placeholder="type to search"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          className={`group flex-grow w-full font-light h-[38px] pl-[21px] pr-[54px] text-light text-base text-textColor bg-inputColor rounded-[20px]
+          className={`group grow w-full font-light h-[38px] pl-[21px] pr-[54px] text-light text-base text-textColor bg-inputColor rounded-[20px]
              outline-none border-[1px] border-transparent transition  hover:border-accentColor focus:border-accentColor`}
         />
         <button

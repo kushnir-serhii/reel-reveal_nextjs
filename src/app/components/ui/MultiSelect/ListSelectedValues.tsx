@@ -1,9 +1,10 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Icon } from "../Icon";
 import { FilterArray } from "@/typification";
 import { capitalizeFirstLetter } from "@/utils";
+import { listSelectedValuesVariants } from "./ListSelectedValues.variants";
 
 interface ListSelectedValuesProps {
   selectedValues: FilterArray;
@@ -43,30 +44,21 @@ export const ListSelectedValues: React.FC<ListSelectedValuesProps> = ({
     setSelectedList((prev) => prev.filter((value) => value !== valueToRemove));
   };
 
+  const { list, item, removeBtn, removeIcon } = listSelectedValuesVariants({
+    empty: selectedList.length === 0,
+  });
+
   return (
-    <ul
-      className={`flex flex-wrap gap-2 sm:gap-4 transition-all duration-1000 ${selectedList.length === 0 ? "h-0" : "h-[42px]"} `}
-    >
+    <ul className={list()}>
       {selectedList.map((value, index) => (
-        <li
-          key={index}
-          className={`flex items-center rounded-full border border-bgLightColor px-4 py-2 bg-bgColor h-[42px]
-             transition-all ease-in-out duration-500 
-              ${index < visibleCount ? "opacity-100" : "opacity-0"}
-                 `}
-        >
+        <li key={index} className={item({ visible: index < visibleCount })}>
           {typeof value === "string" ? capitalizeFirstLetter(value) : value}
           <button
             type="button"
-            className="ml-2"
+            className={removeBtn()}
             onClick={() => removeselectedItem(value)}
           >
-            <Icon
-              id="cross"
-              width={12}
-              height={12}
-              className="text-textColor hover:text-accentColor active:text-accentClicked transition-colors duration-300"
-            />
+            <Icon id="cross" width={12} height={12} className={removeIcon()} />
           </button>
         </li>
       ))}

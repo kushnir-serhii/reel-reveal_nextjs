@@ -1,6 +1,17 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+
+/* Tailwind v4 changed the default border color from gray-200 to currentColor.
+   Restore the v3 default so bare `border` classes look the same. */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
 
 * {
   box-sizing: border-box;
@@ -9,17 +20,19 @@
 }
 
 /*Layer utilities*/
-@layer utilities {
-  .font-urbanist {
-    font-family: 'Urbanist', sans-serif;
-    /* Adjust font stack as needed */
-  }
+@utility font-urbanist {
+  font-family: 'Urbanist', sans-serif;
+  /* Adjust font stack as needed */
+}
 
-  /* Autofill text color (white) to prevent browser default color */
-  .autofill-text:-webkit-autofill {
+/* Autofill text color (white) to prevent browser default color */
+@utility autofill-text {
+  &:-webkit-autofill {
     -webkit-text-fill-color: white;
   }
+}
 
+@layer utilities {
   .text-input {
     /* set text colour (white) */
     @apply autofill-text;
@@ -124,7 +137,7 @@ a {
 }
 
 .custom-outline:focus {
-  @apply outline-none;
+  @apply outline-hidden;
 }
 
 .custom-outline:focus-visible {
@@ -132,7 +145,7 @@ a {
 }
 
 .custom-outline:active {
-  @apply outline-none;
+  @apply outline-hidden;
 }
 
 .border-r-hidden {

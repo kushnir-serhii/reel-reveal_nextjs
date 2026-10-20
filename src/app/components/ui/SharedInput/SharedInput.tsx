@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import clsx from "clsx";
 // import { validateEmail, validatePassword } from "@/utils";
 import { VscEye, VscEyeClosed } from "react-icons/vsc";
 import { UseFormReturn } from "react-hook-form";
+import { sharedInputVariants } from "./SharedInput.variants";
 
 interface CustomInputProps {
   label: string;
   type?: string;
   id: string;
+  className?: string;
   defaultValue?: string;
   isSubmited: boolean;
   onInput?: (value: string) => void;
@@ -31,6 +32,7 @@ export const SharedInput: React.FC<CustomInputProps> = ({
   id,
   type = "text",
   defaultValue,
+  className,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [hasValue, setHasValue] = useState(() => (defaultValue ? true : false));
@@ -67,8 +69,23 @@ export const SharedInput: React.FC<CustomInputProps> = ({
     }
   }, [id, passwordVisible]);
 
+  const hasError = Boolean(errors[id]);
+  const state =
+    isSubmited && hasError
+      ? "error"
+      : !hasError && hasValue
+      ? "filled"
+      : !hasError
+      ? "empty"
+      : "none";
+
+  const { wrapper, input, label: labelStyles, eyeBtn } = sharedInputVariants({
+    state,
+    floated: isFocused || hasValue,
+  });
+
   return (
-    <div className="relative">
+    <div className={wrapper({ className })}>
       <input
         onInput={onInputHandler}
         aria-label={`input ${label}`}
@@ -80,28 +97,18 @@ export const SharedInput: React.FC<CustomInputProps> = ({
         autoComplete={
           ["password", "confirmPassword"].includes(id) ? "off" : "on"
         }
-        className={`text-input flex-grow w-full font-light h-10 text-light text-xl text-textColor bg-inputColor tracking-widest font-mono
-           rounded-[18px] px-5 focus:outline-none transition-all duration-200 ease-in-out outline-none border 
-            autofill:shadow-[inset_0_0_0px_1000px_rgb(32,36,59)]
-            
-          ${!errors[id] && !hasValue && "border-transparent"} 
-          ${isSubmited && errors[id] && "border-error  text-error"}
-          ${!errors[id] && hasValue && "border-accentColor"}
-            `}
+        className={input()}
       />
       <label
         htmlFor={id}
-        className={clsx(
-          "absolute bg-transparent left-5 text-textColor transition-all duration-200 ease-in-out",
-          isFocused || hasValue ? "-top-6" : " top-2"
-        )}
+        className={labelStyles()}
       >
         {label}
       </label>
       {["password", "confirmPassword"].includes(id) && (
         <span
           id="show-password"
-          className="absolute right-5 top-1/2 -translate-y-1/2 cursor-pointer"
+          className={eyeBtn()}
         >
           {passwordVisible ? (
             <VscEye onClick={togglePasswordVisibility} />

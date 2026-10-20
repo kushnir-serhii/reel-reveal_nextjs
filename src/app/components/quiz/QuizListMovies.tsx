@@ -4,7 +4,7 @@ import { ListMovies } from "@/app/components/listMovies/ListMovies";
 import { MySlider } from "@/app/components/mySlider/MySlider";
 import { IMovie, ISessionUser } from "@/typification";
 import { MovieCard } from "../movieCard/MovieCard";
-import { ButtonOrLink } from "../ui/ButtonOrLink";
+import { Button } from "../ui";
 import { ShowQuizCount } from "../showQuizCount/ShowQuizCount";
 
 export interface QuizListMoviesProps {
@@ -71,9 +71,9 @@ export const QuizListMovies: React.FC<QuizListMoviesProps> = ({
           />
         </div>
       )}
-      <ButtonOrLink onClick={clearPrevQuiz} className={`md:w-[245px]`}>
+      <Button onClick={clearPrevQuiz} className={`md:w-[245px]`}>
         <ShowQuizCount /> retake quiz
-      </ButtonOrLink>
+      </Button>
     </div>
   );
 };
