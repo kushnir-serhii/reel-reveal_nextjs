@@ -5,7 +5,7 @@ import { MySlider } from "@/app/components/mySlider/MySlider";
 import { IMovie, ISessionUser } from "@/typification";
 import { MovieCard } from "../movieCard/MovieCard";
 import { Button } from "../ui";
-import { ShowQuizCount } from "../showQuizCount/ShowQuizCount";
+import { QuizCount } from "../quizCount";
 
 export interface QuizListMoviesProps {
   arrMovies: IMovie[];
@@ -58,7 +58,7 @@ export const QuizListMovies: React.FC<QuizListMoviesProps> = ({
       {viewWidth > 1024 ? (
         <ListMovies movies={arrMovies} sessionUser={sessionUser} />
       ) : (
-        <div className={` max-w-[1200px] w-full flex flex-col h-auto`}>
+        <div className={` max-w-300 w-full flex flex-col h-auto`}>
           <MySlider
             arraySlides={arrMovies}
             SlideComponent={(props) => (
@@ -71,8 +71,9 @@ export const QuizListMovies: React.FC<QuizListMoviesProps> = ({
           />
         </div>
       )}
-      <Button onClick={clearPrevQuiz} className={`md:w-[245px]`}>
-        <ShowQuizCount /> retake quiz
+      <Button onClick={clearPrevQuiz} className={`md:w-61.25`}>
+        <span className="font-semibold">retake quiz</span>
+        <QuizCount />
       </Button>
     </div>
   );

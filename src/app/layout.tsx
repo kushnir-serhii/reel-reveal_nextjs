@@ -8,6 +8,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 import { ConsentCoockie } from "./components/consentCoockie/ConsentCookie";
+import { RouteChangeLoader } from "./components/ui/projectorLoader/RouteChangeLoader";
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -91,6 +92,7 @@ export default async function RootLayout({
         />
         <SpeedInsights />
         <ConsentCoockie />
+        <RouteChangeLoader />
       </body>
     </html>
   );

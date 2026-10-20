@@ -6,6 +6,7 @@ export const tooltipVariants = tv({
     content: [
       "absolute z-10 overflow-hidden h-0 w-80 px-3 py-2 font-light text-base text-white bg-black rounded-lg shadow-md",
       "opacity-0 transition-all duration-500 ease-in-out group-hover:flex group-hover:opacity-100 group-hover:h-16",
+      "group-focus-within:flex group-focus-within:opacity-100 group-focus-within:h-16",
     ],
   },
   variants: {

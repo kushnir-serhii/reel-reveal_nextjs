@@ -72,7 +72,7 @@ export const SliderCarousel: React.FC = () => {
         )}
       </div>
       <div className={`hidden md:block`}>
-        <Link href={"/quiz"} className={`take-quiz-btn`}>
+        <Link href={"/quiz"} className="mx-auto w-[249px] sm:w-[343px] md:w-[249px]">
           take a quiz
         </Link>
       </div>

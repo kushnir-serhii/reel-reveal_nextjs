@@ -134,21 +134,21 @@ export const MovieSearch: React.FC<MovieSearchProps> = ({ sessionUser }) => {
             onClick={() => setSize(size + 1)}
             variant="transparent"
             disabled={isLoadingMore}
-            className="md:w-[245px]"
+            className="md:w-61.25"
           >
             load more
           </Button>
         )}
 
-        <Link href="/quiz" className="md:w-[245px]">
+        <Link href="/quiz" className="md:w-61.25">
           take quiz
         </Link>
       </div>
       {/* {isVisible && ( */}
       <button
         onClick={scrollToTop}
-        className={`fixed z-30 bottom-28 bg-accentColor/60 hover:bg-accentColor text-bgColor p-2 rounded-full
-             transition-all duration-200 easy-in-out ${isVisible ? "right-6" : "-right-[210px]"}`}
+        className={`fixed z-30 bottom-[calc(7rem+var(--cookie-banner-h,0px))] bg-accentColor/60 hover:bg-accentColor text-bgColor p-2 rounded-full
+             transition-all duration-200 ease-in-out ${isVisible ? "right-6" : "-right-52.5"}`}
       >
         <HiOutlineChevronDoubleUp className="size-10" />
       </button>

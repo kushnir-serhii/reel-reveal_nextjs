@@ -29,7 +29,7 @@ export const Footer: React.FC = () => {
             <MainLogo />
           </div>
           <div className="md:hidden">
-            <ButtonLink href={"/quiz"} className={`take-quiz-btn`}>
+            <ButtonLink href={"/quiz"} className="mx-auto w-[249px] sm:w-[343px] md:w-[249px]">
               take a quiz
             </ButtonLink>
           </div>

@@ -1,4 +1,5 @@
 import { useRouter } from "next/navigation";
+import { startRouteLoader } from "@/app/components/ui/projectorLoader/RouteChangeLoader";
 
 export const useOpenUrl = () => {
   const router = useRouter();
@@ -15,6 +16,7 @@ export const useOpenUrl = () => {
     if (e?.ctrlKey || e?.metaKey) {
       window.open(url, "_blank");
     } else {
+      startRouteLoader(url);
       router.push(url);
     }
   };

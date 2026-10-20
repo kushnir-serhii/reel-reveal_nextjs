@@ -2,8 +2,7 @@
 
 import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
-import { Link } from "@/app/components/ui";
-import { ShowQuizCount } from "@/app/components/showQuizCount/ShowQuizCount";
+import { QuizLink } from "@/app/components/quizCount";
 import { animationSection } from "@/variables/animation";
 
 export const Hero: React.FC = () => {
@@ -27,9 +26,7 @@ export const Hero: React.FC = () => {
           finding the perfect movie match.
         </p>
 
-        <Link href="/quiz" className={`mt-2 md:w-[245px]`}>
-          <ShowQuizCount/> start quiz
-        </Link>
+        <QuizLink label="start quiz" className="mt-2 md:w-61.25" />
       </article>
       <div
         className={`relative flex items-center justify-center w-full h-auto`}
@@ -40,7 +37,7 @@ export const Hero: React.FC = () => {
           height={584}
           alt="Hero movies colage"
           priority
-          className={` aspect-[590/584]`}
+          className={` aspect-590/584`}
         />
 
         <Image
@@ -48,7 +45,7 @@ export const Hero: React.FC = () => {
           width={833}
           height={890}
           alt="Hero movies"
-          className={`absolute -z-10 top-1/2 left-1/2 max-w-none w-[833px] h-auto
+          className={`absolute -z-10 top-1/2 left-1/2 max-w-none w-208.25 h-auto
             transform -translate-x-1/2 -translate-y-1/2 blur-hero pointer-events-none`}
         />
       </div>

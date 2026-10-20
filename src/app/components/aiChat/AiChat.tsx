@@ -9,18 +9,27 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { HiOutlineChatBubbleLeftRight } from "react-icons/hi2";
 import { AiChatMessage } from "@/typification";
 import { useContextCountQuiz } from "@/context/CountQuizContext";
+import { authHref } from "@/utils/safeRedirect";
 import {
   AI_CHAT_MAX_HISTORY_LENGTH,
   AI_CHAT_MAX_MESSAGE_LENGTH,
   AI_CHAT_MAX_MESSAGES,
+  AI_DAILY_LIMIT_USER,
   AI_LIMIT_CODES,
 } from "@/variables";
 import { Icon } from "../ui/Icon";
+import { AiChatLimitNotice } from "./AiChatLimitNotice";
 import { AiChatMovieCard } from "./AiChatMovieCard";
+
+const LIMIT_CODES: string[] = [
+  AI_LIMIT_CODES.loginRequired,
+  AI_LIMIT_CODES.noCredits,
+];
 
 type ChatError = { text: string; code?: string };
 
@@ -74,6 +83,7 @@ export const AiChat: React.FC = () => {
   const [inputWarning, setInputWarning] = useState("");
 
   const { quota, refresh } = useContextCountQuiz();
+  const pathname = usePathname();
 
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -164,7 +174,12 @@ export const AiChat: React.FC = () => {
     }
   };
 
-  const isOutOfRequests = quota?.remaining === 0;
+  // The server's 429 can arrive before the quota refetch shows 0.
+  const isLimitError = !!error?.code && LIMIT_CODES.includes(error.code);
+  const isOutOfRequests = quota?.remaining === 0 || isLimitError;
+  const isGuest =
+    quota?.isGuest ?? error?.code === AI_LIMIT_CODES.loginRequired;
+  const close = () => setIsOpen(false);
 
   return (
     <>
@@ -177,7 +192,7 @@ export const AiChat: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="fixed z-40 bottom-24 right-4 left-4 sm:left-auto sm:right-6 sm:w-[400px] h-[min(600px,calc(100dvh-140px))]
+            className="fixed z-40 bottom-[calc(6rem+var(--cookie-banner-h,0px))] right-4 left-4 sm:left-auto sm:right-6 sm:w-100 h-[min(600px,calc(100dvh-140px-var(--cookie-banner-h,0px)))]
               flex flex-col rounded-2xl bg-bgSelectDropDown border border-bgSelect shadow-hoverShadow overflow-hidden"
           >
             <header className="flex items-center justify-between px-4 py-3 border-b border-bgSelect">
@@ -186,9 +201,21 @@ export const AiChat: React.FC = () => {
                 {quota && (
                   <p className="text-xs text-disabledColor">
                     {quota.remaining}{" "}
-                    {quota.remaining === 1 ? "request" : "requests"} left
-                    {quota.credits > 0 && ` (${quota.credits} paid)`} ·{" "}
-                    {quota.tokensToday.toLocaleString()} tokens today
+                    {quota.remaining === 1 ? "request" : "requests"} left today
+                    {quota.credits > 0 && ` (${quota.credits} paid)`}
+                    {/* Tell guests about the higher limit before they hit it. */}
+                    {quota.isGuest && quota.remaining > 0 && (
+                      <>
+                        {" · "}
+                        <Link
+                          href={authHref(pathname)}
+                          onClick={close}
+                          className="text-accentColor underline-offset-2 hover:underline"
+                        >
+                          Log in for {AI_DAILY_LIMIT_USER} a day
+                        </Link>
+                      </>
+                    )}
                   </p>
                 )}
               </div>
@@ -250,77 +277,56 @@ export const AiChat: React.FC = () => {
                   Searching movies…
                 </p>
               )}
-              {error && (
-                <div className="self-start flex flex-col gap-2 text-sm">
-                  <p className="text-error">{error.text}</p>
-                  {error.code === AI_LIMIT_CODES.loginRequired && (
-                    <Link
-                      href="/auth"
-                      onClick={() => setIsOpen(false)}
-                      className="text-accentColor underline"
-                    >
-                      Log in
-                    </Link>
-                  )}
-                  {error.code === AI_LIMIT_CODES.noCredits && (
-                    <Link
-                      href="/payment"
-                      onClick={() => setIsOpen(false)}
-                      className="text-accentColor underline"
-                    >
-                      Buy more requests
-                    </Link>
-                  )}
-                </div>
+              {error && !isLimitError && (
+                <p className="self-start text-sm text-error">{error.text}</p>
               )}
             </div>
 
-            <form
-              onSubmit={sendMessage}
-              className="flex flex-col gap-1 p-3 border-t border-bgSelect"
-            >
-              <div className="flex items-end gap-2">
-                <textarea
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => {
-                    setInput(e.target.value);
-                    setInputWarning("");
-                  }}
-                  onKeyDown={handleKeyDown}
-                  onPaste={handlePaste}
-                  maxLength={AI_CHAT_MAX_MESSAGE_LENGTH}
-                  rows={2}
-                  disabled={isOutOfRequests}
-                  placeholder={
-                    isOutOfRequests
-                      ? "No AI requests left for today"
-                      : "E.g. a man wakes up every day on the same date…"
-                  }
-                  className="flex-1 resize-none rounded-xl bg-inputColor px-3 py-2 text-sm outline-none focus:shadow-focusShadow placeholder:text-greyColor disabled:opacity-60"
-                />
-                <button
-                  type="submit"
-                  disabled={isLoading || !input.trim() || isOutOfRequests}
-                  className="px-4 py-2 rounded-xl bg-accentColor text-bgColor font-semibold text-sm transition
+            {isOutOfRequests ? (
+              <AiChatLimitNotice isGuest={isGuest} onNavigate={close} />
+            ) : (
+              <form
+                onSubmit={sendMessage}
+                className="flex flex-col gap-1 p-3 border-t border-bgSelect"
+              >
+                <div className="flex items-end gap-2">
+                  <textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => {
+                      setInput(e.target.value);
+                      setInputWarning("");
+                    }}
+                    onKeyDown={handleKeyDown}
+                    onPaste={handlePaste}
+                    maxLength={AI_CHAT_MAX_MESSAGE_LENGTH}
+                    rows={2}
+                    placeholder="E.g. a man wakes up every day on the same date…"
+                    className="flex-1 resize-none rounded-xl bg-inputColor px-3 py-2 text-sm outline-none focus:shadow-focusShadow placeholder:text-greyColor"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isLoading || !input.trim()}
+                    className="px-4 py-2 rounded-xl bg-accentColor text-bgColor font-semibold text-sm transition
                     hover:bg-clickedColor disabled:bg-disabledBgColor disabled:text-disabledColor"
-                >
-                  Send
-                </button>
-              </div>
-              <div className="flex justify-between gap-2 text-[11px]">
-                <span className="text-error">{inputWarning}</span>
-                <span
-                  className={
-                    input.length >= AI_CHAT_MAX_MESSAGE_LENGTH
-                      ? "text-error"
-                      : "text-greyColor"
-                  }
-                >
-                  {input.length}/{AI_CHAT_MAX_MESSAGE_LENGTH}
-                </span>
-              </div>
-            </form>
+                  >
+                    Send
+                  </button>
+                </div>
+                <div className="flex justify-between gap-2 text-[11px]">
+                  <span className="text-error">{inputWarning}</span>
+                  <span
+                    className={
+                      input.length >= AI_CHAT_MAX_MESSAGE_LENGTH
+                        ? "text-error"
+                        : "text-greyColor"
+                    }
+                  >
+                    {input.length}/{AI_CHAT_MAX_MESSAGE_LENGTH}
+                  </span>
+                </div>
+              </form>
+            )}
           </motion.section>
         )}
       </AnimatePresence>
@@ -329,8 +335,8 @@ export const AiChat: React.FC = () => {
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label={isOpen ? "Close AI chat" : "Open AI chat"}
         aria-expanded={isOpen}
-        className="fixed z-40 bottom-6 right-6 p-3 rounded-full bg-accentColor text-bgColor shadow-hoverShadow
-          transition duration-200 hover:bg-clickedColor hover:shadow-focusShadow"
+        className="fixed z-40 bottom-[calc(1.5rem+var(--cookie-banner-h,0px))] right-6 p-3 rounded-full bg-accentColor text-bgColor shadow-hoverShadow
+          transition-[bottom,background-color,box-shadow] duration-200 hover:bg-clickedColor hover:shadow-focusShadow"
       >
         <HiOutlineChatBubbleLeftRight className="size-8" />
       </button>
