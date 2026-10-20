@@ -8,11 +8,17 @@ export interface LinkProps
   disabled?: boolean;
 }
 
-export const Link = ({ variant, disabled, className, ...props }: LinkProps) => (
+export const Link = ({
+  variant,
+  size,
+  disabled,
+  className,
+  ...props
+}: LinkProps) => (
   <NextLink
     aria-disabled={disabled || undefined}
     tabIndex={disabled ? -1 : undefined}
-    className={buttonVariants({ variant, disabled, className })}
+    className={buttonVariants({ variant, size, disabled, className })}
     {...props}
   />
 );

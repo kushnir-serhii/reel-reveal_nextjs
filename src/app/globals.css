@@ -13,12 +13,6 @@
   }
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
 /*Layer utilities*/
 @utility font-urbanist {
   font-family: 'Urbanist', sans-serif;
@@ -56,6 +50,15 @@
   .scrollbar::-webkit-scrollbar-track {
     background-color: #f1f1f1;
   } */
+}
+
+/* Element defaults live in the base layer: in Tailwind v4 unlayered CSS beats
+   every utility, so e.g. `a { color }` would override `text-blackColor`. */
+@layer base {
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
 }
 
 html {
@@ -129,10 +132,13 @@ button,
 a {
   @apply cursor-pointer p-0 m-0 border-none;
 }
+}
 
+/* Shared classes: layered so utilities passed alongside them still win. */
+@layer components {
 .page-wrapper {
-  @apply flex flex-col items-center justify-start font-light font-urbanist mx-auto px-4 py-6 w-full max-w-[1440px]
-   text-textColor gap-16 overflow-hidden md:px-16 md:py-20 md:gap-20 xl:gap-40 xl:px-[120px] xl:pb-32 lg:py-10
+  @apply flex flex-col items-center justify-start font-light font-urbanist mx-auto px-4 py-6 w-full max-w-360
+   text-textColor gap-16 overflow-hidden md:px-16 md:py-20 md:gap-20 xl:gap-40 xl:px-30 xl:pb-32 lg:py-10
    xl:overflow-visible;
 }
 
@@ -141,7 +147,7 @@ a {
 }
 
 .custom-outline:focus-visible {
-  @apply outline-[2px] outline-accentColor text-accentColor;
+  @apply outline-2 outline-accentColor text-accentColor;
 }
 
 .custom-outline:active {
@@ -164,9 +170,6 @@ a {
 .link-btn {
   @apply flex items-center justify-center h-10 font-bold text-lg uppercase text-bgColor rounded-full bg-accentColor shadow-none transition-all duration-300 ease-in-out hover:shadow-hoverShadow hover:bg-accentColor focus:shadow-focusShadow active:bg-clickedColor
 }
-
-.take-quiz-btn {
-  @apply w-[249px] mx-auto sm:w-[343px] md:w-[249px];
 }
 
 .slick-track {
@@ -272,3 +275,54 @@ a {
 }
 
 /*# sourceMappingURL=globals.css.map */
+/* Quiz answer cards: cursor-following glow. --x/--y are set from JS. */
+.quiz-card {
+  --x: 50%;
+  --y: 50%;
+}
+
+.quiz-card-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle at var(--x) var(--y),
+    theme(colors.accentColor / 0.28),
+    transparent 60%
+  );
+  transition: opacity 300ms ease-out;
+}
+
+.quiz-card:hover:not(:disabled) .quiz-card-glow {
+  opacity: 1;
+}
+
+.quiz-card:focus-visible .quiz-card-glow {
+  opacity: 0.6;
+}
+
+/* No hover on touch devices: avoid a glow stuck after a tap. */
+@media (hover: none) {
+  .quiz-card:hover .quiz-card-glow {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quiz-card-glow {
+    transition: none;
+  }
+}
+
+/* Light sweep inside the ProjectorLoader beam */
+@keyframes projector-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}

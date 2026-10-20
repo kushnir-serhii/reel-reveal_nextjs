@@ -3,7 +3,7 @@ import { tv, type VariantProps } from "@/utils/tv";
 export const buttonVariants = tv(
   {
     base: [
-      "flex items-center justify-center gap-2 h-10 w-full",
+      "flex items-center justify-center gap-2",
       "font-semibold uppercase rounded-full cursor-pointer",
       "transition-all duration-300",
       "focus:outline-2 focus:shadow-focusShadow",
@@ -16,6 +16,11 @@ export const buttonVariants = tv(
           "active:bg-clickedColor active:opacity-100",
           "focus:bg-accentColor",
         ],
+        light: [
+          "bg-textColor text-blackColor",
+          "hover:bg-accentColor hover:shadow-hoverShadow",
+          "active:bg-clickedColor",
+        ],
         transparent: [
           "bg-transparent text-textColor border border-solid border-textColor",
           "hover:bg-transparent hover:border-accentColor hover:text-accentColor",
@@ -23,12 +28,17 @@ export const buttonVariants = tv(
           "focus:bg-transparent",
         ],
       },
+      size: {
+        sm: "h-[38px] w-auto px-5 text-base leading-5",
+        md: "h-10 w-full",
+      },
       disabled: {
         true: "opacity-50 cursor-default pointer-events-none",
       },
     },
     defaultVariants: {
       variant: "primary",
+      size: "md",
     },
   }
 );

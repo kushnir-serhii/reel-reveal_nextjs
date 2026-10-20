@@ -7,6 +7,7 @@ export interface ButtonProps
 
 export const Button = ({
   variant,
+  size,
   disabled,
   className,
   type = "button",
@@ -15,7 +16,7 @@ export const Button = ({
   <button
     type={type}
     disabled={disabled}
-    className={buttonVariants({ variant, disabled, className })}
+    className={buttonVariants({ variant, size, disabled, className })}
     {...props}
   />
 );
