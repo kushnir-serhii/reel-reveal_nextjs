@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 import useSWR from "swr";
 import { useSession } from "next-auth/react";
-import { ButtonOrLink } from "../ui/ButtonOrLink";
+import { Link } from "../ui";
 import { ListMovies } from "@/app/components/listMovies/ListMovies";
 import { Loader } from "../ui/Loader";
 import { fetcher } from "../../actions";
@@ -56,11 +56,11 @@ export const SavedMovies: React.FC<SavedMoviesProps> = React.memo(
               Your list is empty, explore our movie search or take a quiz to
               find something interesting!
             </p>
-            <div className="flex flex-col items-center justify-center w-full md:flex-row md:w-[590px] gap-4">
-              <ButtonOrLink href="/movies" transparent>
+            <div className="flex flex-col items-center justify-center w-full md:flex-row md:w-147.5 gap-4">
+              <Link href="/movies" variant="transparent">
                 search movie
-              </ButtonOrLink>
-              <ButtonOrLink href="/quiz">start quiz</ButtonOrLink>
+              </Link>
+              <Link href="/quiz">start quiz</Link>
             </div>
           </>
         ) : (

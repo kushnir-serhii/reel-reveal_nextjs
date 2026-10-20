@@ -57,8 +57,8 @@ export const MovieCardHoverBtn: React.FC<MovieCardHoverBtnProps> = ({
       <span
         className={`absolute z-10 w-full h-full border rounded-full pr-4 border-solid transition-all duration-300  ${
           isChecked
-            ? "text-accentColor border-accentColor text-opacity-0 group-hover:text-opacity-100"
-            : "text-textColor border-textColor text-opacity-0 group-hover:text-opacity-100"
+            ? "text-accentColor/0 border-accentColor group-hover:text-accentColor"
+            : "text-textColor/0 border-textColor group-hover:text-textColor"
         } `}
       >
         {text}

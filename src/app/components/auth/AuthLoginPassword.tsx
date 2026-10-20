@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ButtonOrLink } from "@/app/components/ui/ButtonOrLink";
+import { Button } from "@/app/components/ui";
 import { SharedInput } from "@/app/components/ui/SharedInput";
 import { validatePassword } from "@/utils";
 import { toast } from "react-toastify";
@@ -86,12 +86,12 @@ const [isSubmited, setIsSubmited] = useState(false);
           validation={{ required: true, validate: validatePassword }}
           errors={errors}
         />
-        <ButtonOrLink
+        <Button
           type="submit"
           onClick={() => setIsSubmited(true)}
         >
           sign in
-        </ButtonOrLink>
+        </Button>
       </form>
       <div className={`w-full flex items-center justify-center gap-2`}>
         <Link href={`/register`} className={`link`}>

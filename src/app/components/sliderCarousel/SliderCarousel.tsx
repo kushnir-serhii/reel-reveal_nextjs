@@ -7,7 +7,7 @@ import { MySlider } from "../mySlider/MySlider";
 import { Loader } from "../ui/Loader";
 import { SliderCarouselSlide } from "./SliderCarouselSlide";
 import { animationSection } from "@/variables/animation";
-import { ButtonOrLink } from "../ui/ButtonOrLink";
+import { Link } from "../ui";
 
 export const SliderCarousel: React.FC = () => {
   const [images, setFiles] = useState<string[]>([]);
@@ -72,9 +72,9 @@ export const SliderCarousel: React.FC = () => {
         )}
       </div>
       <div className={`hidden md:block`}>
-        <ButtonOrLink href={"/quiz"} className={`take-quiz-btn`}>
+        <Link href={"/quiz"} className={`take-quiz-btn`}>
           take a quiz
-        </ButtonOrLink>
+        </Link>
       </div>
     </motion.section>
   );

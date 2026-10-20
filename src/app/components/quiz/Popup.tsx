@@ -1,5 +1,5 @@
 import { Icon } from "../ui/Icon";
-import { ButtonOrLink } from "../ui";
+import { Button, Link } from "../ui";
 import Image from "next/image";
 import {
   AI_CREDIT_PACK,
@@ -62,10 +62,10 @@ export const Popup: React.FC<PopupProps> = ({ isGuest, onClose }) => {
           </div>
         )}
         <div className="flex flex-col md:flex-row justify-start items-start gap-2 w-full">
-          <ButtonOrLink transparent onClick={onClose} className="w-full">
+          <Button variant="transparent" onClick={onClose} className="w-full">
             keep free plan
-          </ButtonOrLink>
-          <ButtonOrLink
+          </Button>
+          <Link
             href={isGuest ? "/auth?from=/quiz" : "/payment"}
             className="w-full"
           >
@@ -78,7 +78,7 @@ export const Popup: React.FC<PopupProps> = ({ isGuest, onClose }) => {
                 className="text-bgColor"
               />
             )}
-          </ButtonOrLink>
+          </Link>
         </div>
       </div>
     </div>

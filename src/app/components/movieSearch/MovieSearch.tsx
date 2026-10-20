@@ -8,7 +8,7 @@ import { fetchMovieDataFromAPI } from "../../actions/fetchMovieDataFromAPI";
 import { IQueryFilterParams, IMovie, ISessionUser } from "@/typification";
 import { ListMovies } from "@/app/components/listMovies/ListMovies";
 import { MovieSearchFilter } from "./MovieSearchFilter";
-import { ButtonOrLink } from "../ui/ButtonOrLink";
+import { Button, Link } from "../ui";
 import { capitalizeFirstLetter } from "@/utils";
 import { useScrollToTop, useShowScrollTopButton } from "@/hooks";
 import { Loader } from "../ui/Loader";
@@ -130,19 +130,19 @@ export const MovieSearch: React.FC<MovieSearchProps> = ({ sessionUser }) => {
         className={`flex w-full items-center justify-center gap-5 flex-col sm:flex-row`}
       >
         {hasMore && (
-          <ButtonOrLink
+          <Button
             onClick={() => setSize(size + 1)}
-            transparent
+            variant="transparent"
             disabled={isLoadingMore}
             className="md:w-[245px]"
           >
             load more
-          </ButtonOrLink>
+          </Button>
         )}
 
-        <ButtonOrLink href="/quiz" className="md:w-[245px]">
+        <Link href="/quiz" className="md:w-[245px]">
           take quiz
-        </ButtonOrLink>
+        </Link>
       </div>
       {/* {isVisible && ( */}
       <button

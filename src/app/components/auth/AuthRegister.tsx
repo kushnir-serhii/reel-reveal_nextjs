@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { registerUser } from "@/app/actions/registerUser";
 import { doCredentialLogin } from "@/app/actions/socialLogin";
 import { SharedInput } from "../ui/SharedInput";
-import { ButtonOrLink } from "../ui/ButtonOrLink";
+import { Button } from "../ui";
 import { useState } from "react";
 
 export interface IUserData {
@@ -116,12 +116,12 @@ const [isSubmited, setIsSubmited] = useState(false);
           }}
           errors={errors}
         />
-        <ButtonOrLink
+        <Button
           type="submit"
           onClick={() => setIsSubmited(true)}
         >
           create account
-        </ButtonOrLink>
+        </Button>
       </form>
       <Link href={`/register`} className={`link`}>
         <p>Forgot password?</p>

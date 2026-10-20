@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { userEmailSignal } from "@/context/UserContext";
 import { fetchUserByEmail } from "../../actions/fetchUserByEmail";
 import { socialLogin } from "../../actions/socialLogin";
-import { ButtonOrLink } from "../ui/ButtonOrLink";
+import { Button } from "../ui";
 import { SharedInput } from "../ui/SharedInput";
 import { validateEmail } from "@/utils";
 import { Icon } from "../ui/Icon";
@@ -69,13 +69,13 @@ const [isSubmited, setIsSubmited] = useState(false);
           errors={errors}
         />
 
-        <ButtonOrLink
+        <Button
           type="submit"
           onClick={() => setIsSubmited(true)}
           className="w-full"
         >
           continue with email
-        </ButtonOrLink>
+        </Button>
       </form>
       <div className={`w-full flex items-center justify-center gap-2`}>
         <div className={`w-full h-[1px] bg-gray-400 `}></div>

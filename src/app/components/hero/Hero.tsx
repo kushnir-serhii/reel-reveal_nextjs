@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
-import { ButtonOrLink } from "@/app/components/ui/ButtonOrLink";
+import { Link } from "@/app/components/ui";
 import { ShowQuizCount } from "@/app/components/showQuizCount/ShowQuizCount";
 import { animationSection } from "@/variables/animation";
 
@@ -27,9 +27,9 @@ export const Hero: React.FC = () => {
           finding the perfect movie match.
         </p>
 
-        <ButtonOrLink href="/quiz" className={`mt-2 md:w-[245px]`}>
+        <Link href="/quiz" className={`mt-2 md:w-[245px]`}>
           <ShowQuizCount/> start quiz
-        </ButtonOrLink>
+        </Link>
       </article>
       <div
         className={`relative flex items-center justify-center w-full h-auto`}

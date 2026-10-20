@@ -2,7 +2,8 @@
 
 import React, { useEffect, ReactNode, useState } from "react";
 import { createPortal } from "react-dom";
-import { Icon } from "./Icon";
+import { Icon } from "../Icon";
+import { modalVariants } from "./Modal.variants";
 
 interface ModalProps {
   children: ReactNode;
@@ -10,6 +11,7 @@ interface ModalProps {
   onClose?: () => void;
   toggleDuration?: number;
   isHideCross?: boolean;
+  className?: string;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -17,7 +19,9 @@ export const Modal: React.FC<ModalProps> = ({
   isOpen,
   onClose,
   isHideCross = false,
+  className,
 }) => {
+  const { overlay, content, closeBtn, closeIcon } = modalVariants();
 const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
   useEffect(() => {
     if(!document) return
@@ -78,22 +82,22 @@ const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
   return createPortal(
     <div
       onClick={handleClickOutside}
-      className="fixed inset-0 z-50 flex items-center justify-center w-screen bg-black bg-opacity-80"
+      className={overlay({ className })}
     >
       {/* This is the dynamic sizing wrapper */}
-      <div className="relative max-w-screen inline-block">
+      <div className={content()}>
         {children}
         {onClose && !isHideCross && (
           <button
             onClick={onClose}
-            className="absolute z-50 p-1 top-4 right-4"
+            className={closeBtn()}
             aria-label="Close Modal"
           >
             <Icon
               id={"cross"}
               width={20}
               height={20}
-              className="w-[20px] h-[20px] text-disabledColor transition duration-300 ease-in-out hover:text-accentColor"
+              className={closeIcon()}
             />
           </button>
         )}

@@ -9,7 +9,7 @@ import { QuizQuestions } from "./QuizQuestions";
 import { fetchQuizMovies } from "../../actions/fetchQuizMovies";
 import { AiLimitError, ISessionUser } from "@/typification";
 import { qiuzMoviesSignal } from "@/context/MoviesContext";
-import { ButtonOrLink } from "../ui/ButtonOrLink";
+import { Button } from "../ui";
 import { useContextCountQuiz } from "@/context/CountQuizContext";
 import { Modal } from "../ui/Modal";
 import { Popup } from "./Popup";
@@ -94,7 +94,7 @@ export const Quiz: React.FC<IQuizProps> = ({ sessionUser, isSHowWithAnimation=tr
     return (
       <div className="flex items-center justify-center flex-col gap-12">
         <h2 className={`pr-2.5 pl-2.5`}>Somthing went wrong</h2>
-        <ButtonOrLink onClick={mutate}>try again</ButtonOrLink>
+        <Button onClick={() => mutate()}>try again</Button>
       </div>
     );
   }

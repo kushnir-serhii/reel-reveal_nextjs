@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { genres } from "../../../../public/genres/genres";
 import { arrayOfRatings, arrayOfYears } from "@/utils";
-import { ButtonOrLink } from "../ui/ButtonOrLink";
+import { Button } from "../ui";
 import { Icon } from "../ui/Icon";
 import { MultiSelect } from "../ui/MultiSelect";
 import { ListSelectedValues } from "../ui/MultiSelect/ListSelectedValues";
@@ -114,9 +114,9 @@ export const MovieSearchFilter: React.FC<MovieSearchFilterProps> = ({
             />{" "}
           </li>
         </ul>
-        <ButtonOrLink onClick={handleFilterOptions} className="md:w-[245px]">
+        <Button onClick={handleFilterOptions} className="md:w-[245px]">
           apply filters
-        </ButtonOrLink>
+        </Button>
       </div>
       <div className={`flex flex-wrap justify-between gap-6`}>
         <ListSelectedValues
