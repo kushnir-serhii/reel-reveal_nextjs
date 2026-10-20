@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import useSWR from "swr";
 import { motion } from "motion/react";
 import { Loader } from "../ui/Loader";
@@ -11,8 +11,7 @@ import { AiLimitError, ISessionUser } from "@/typification";
 import { qiuzMoviesSignal } from "@/context/MoviesContext";
 import { Button } from "../ui";
 import { useContextCountQuiz } from "@/context/CountQuizContext";
-import { Modal } from "../ui/Modal";
-import { Popup } from "./Popup";
+import { CreditsModal } from "./CreditsModal";
 import { animationSection } from "@/variables/animation";
 import { AI_LIMIT_CODES } from "@/variables";
 
@@ -32,7 +31,6 @@ interface IQuizProps {
 export const Quiz: React.FC<IQuizProps> = ({ sessionUser, isSHowWithAnimation=true, }) => {
   const [quizResult, setQuizResult] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [showPopUp, setShowPopUp] = useState(false);
   const [isQuizActive, setIsQuizActive] = useState(
     qiuzMoviesSignal.value.length ? false : true
   );
@@ -77,19 +75,6 @@ export const Quiz: React.FC<IQuizProps> = ({ sessionUser, isSHowWithAnimation=tr
     }
   };
 
-  useEffect(() => {
-    if (!showModal) {
-      setTimeout(() => {
-        setShowPopUp(false);
-      }, 300);
-    }
-    if (showModal) {
-      setTimeout(() => {
-        setShowPopUp(true);
-      }, 300);
-    }
-  }, [showModal]);
-
   if (error && !isLimitError(error)) {
     return (
       <div className="flex items-center justify-center flex-col gap-12">
@@ -124,18 +109,11 @@ export const Quiz: React.FC<IQuizProps> = ({ sessionUser, isSHowWithAnimation=tr
       </div>
 
       <div className="bottom-0 w-lvw h-10 bg-repeat-x bg-contain z-10 bg-borderIcon"/>
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
-        <div className="relative flex items-center justify-center md:h-[620px] w-[100vw] md:w-[90vw] lg:w-[860px] h-lvh">
-          <div
-            className={`absolute w-full h-full transition-all duration-1000 ease-in-out z-40 ${showPopUp ? "left-1/2 -translate-x-1/2" : "-left-[1280px]"}`}
-          >
-            <Popup
-              isGuest={quota?.isGuest ?? !sessionUser.userId}
-              onClose={() => setShowModal(false)}
-            />
-          </div>
-        </div>
-      </Modal>
+      <CreditsModal
+        isOpen={showModal}
+        isGuest={quota?.isGuest ?? !sessionUser.userId}
+        onClose={() => setShowModal(false)}
+      />
     </motion.section>
   );
 };

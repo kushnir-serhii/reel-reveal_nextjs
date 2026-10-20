@@ -1,6 +1,10 @@
+"use client";
+
 import { Icon } from "../ui/Icon";
 import { Button, Link } from "../ui";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { authHref } from "@/utils/safeRedirect";
 import {
   AI_CREDIT_PACK,
   AI_DAILY_LIMIT_GUEST,
@@ -25,6 +29,7 @@ interface PopupProps {
 }
 
 export const Popup: React.FC<PopupProps> = ({ isGuest, onClose }) => {
+  const pathname = usePathname();
   const price = `\u20AC${AI_CREDIT_PACK.amount / 100}`;
 
   return (
@@ -66,7 +71,7 @@ export const Popup: React.FC<PopupProps> = ({ isGuest, onClose }) => {
             keep free plan
           </Button>
           <Link
-            href={isGuest ? "/auth?from=/quiz" : "/payment"}
+            href={isGuest ? authHref(pathname) : "/payment"}
             className="w-full"
           >
             {isGuest ? "log in" : `buy ${AI_CREDIT_PACK.credits} requests`}
