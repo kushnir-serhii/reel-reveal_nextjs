@@ -34,7 +34,7 @@ export default async function Home() {
       <HowItWorks />
       <DynamicQuiz sessionUser={sessionUser} />
       <DynamicGetShowMovies
-        title={"Upcoming 20 movies in 2025"}
+        title={`Upcoming 20 movies in ${new Date().getFullYear()}`}
         movies={upcomingMovies}
         sessionUser={sessionUser}
       />

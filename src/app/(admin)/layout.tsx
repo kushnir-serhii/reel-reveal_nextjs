@@ -30,9 +30,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           height={361}
           loading="eager"
           fetchPriority="low"
-          className={`absolute blur-header w-full max-w-[1440px] h-auto -z-10 `}
+          className={`absolute blur-header w-full max-w-360 h-auto -z-10 `}
         />
-        <div className="relative z-0 w-full mt-[58px] md:mt-[68px] lg:mt-[84px]">
+        <div className="relative z-0 w-full mt-14.5 md:mt-17 lg:mt-21">
           {children}
         </div>
 
@@ -41,7 +41,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           alt=""
           width={1429}
           height={614}
-          className={`absolute bottom-0 blur-footer left-1/2 transform -translate-x-1/2 -z-10 w-full max-w-[1440px] h-auto`}
+          className={`absolute bottom-0 blur-footer left-1/2 transform -translate-x-1/2 -z-10 w-full max-w-360 h-auto`}
         />
         <Footer />
         <AiChat />
