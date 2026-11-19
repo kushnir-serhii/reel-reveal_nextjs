@@ -72,7 +72,7 @@ export const SavedMovies: React.FC<SavedMoviesProps> = React.memo(
             <ListMovies movies={movies} sessionUser={sessionUser} />
           </>
         )}
-        <Modal isOpen={isInitialLoading || isValidating}>
+        <Modal isOpen={isInitialLoading}>
           <div className="flex items-center justify-center w-screen h-screen">
             <Loader />
           </div>
